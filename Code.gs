@@ -12,6 +12,8 @@ function onOpen() {
     .addItem('Show Campaign Manager', 'showSidebar')
     .addSeparator()
     .addItem('Initialize/Reset Campaign', 'initializeCompleteCampaign')
+    .addSeparator()
+    .addItem('Log Custom Event', 'logCustomEvent')
     .addToUi();
 }
 
@@ -75,33 +77,47 @@ function processDay() {
   
   const currentDay = ss.getRangeByName('CurrentDay').getValue();
   const miles = ss.getRangeByName('CalcMilesToday').getValue();
-  ss.getRangeByName('CurrentDay').setValue(currentDay + 1);
+  const newDay = currentDay + 1;
+  ss.getRangeByName('CurrentDay').setValue(newDay);
   ss.getRangeByName('TotalMiles').setValue(ss.getRangeByName('TotalMiles').getValue() + miles);
+  
+  const foodUsed = ss.getRangeByName('FoodDaily').getValue();
+  const waterUsed = ss.getRangeByName('WaterDaily').getValue();
+  const fodderUsed = ss.getRangeByName('FodderDaily').getValue();
+  const provisionUsed = ss.getRangeByName('ProvisionDaily').getValue();
+  const foodFound = ss.getRangeByName('FoodFound').getValue();
+  const waterFound = ss.getRangeByName('WaterFound').getValue();
+  
   ss.getRangeByName('FoodStock').setValue(
-    ss.getRangeByName('FoodStock').getValue() - ss.getRangeByName('FoodDaily').getValue() + ss.getRangeByName('FoodFound').getValue()
+    ss.getRangeByName('FoodStock').getValue() - foodUsed + foodFound
   );
   ss.getRangeByName('WaterStock').setValue(
-    ss.getRangeByName('WaterStock').getValue() - ss.getRangeByName('WaterDaily').getValue() + ss.getRangeByName('WaterFound').getValue()
+    ss.getRangeByName('WaterStock').getValue() - waterUsed + waterFound
   );
   ss.getRangeByName('FodderStock').setValue(
-    ss.getRangeByName('FodderStock').getValue() - ss.getRangeByName('FodderDaily').getValue()
+    ss.getRangeByName('FodderStock').getValue() - fodderUsed
   );
   ss.getRangeByName('ProvisionStock').setValue(
-    ss.getRangeByName('ProvisionStock').getValue() - ss.getRangeByName('ProvisionDaily').getValue()
+    ss.getRangeByName('ProvisionStock').getValue() - provisionUsed
   );
   updateDeprivation(ss);
   const log = ss.getSheetByName('Log');
   log.appendRow([
-    currentDay + 1, new Date(), miles,
-    ss.getRangeByName('FoodDaily').getValue(),
-    ss.getRangeByName('WaterDaily').getValue(),
-    ss.getRangeByName('FodderDaily').getValue(),
-    ss.getRangeByName('ProvisionDaily').getValue(),
+    newDay, new Date(), miles,
+    foodUsed,
+    waterUsed,
+    fodderUsed,
+    provisionUsed,
     ''
   ]);
   ss.getRangeByName('FoodFound').setValue(0);
   ss.getRangeByName('WaterFound').setValue(0);
-  return `Advanced to Day ${currentDay + 1}. Traveled ${Math.round(miles)} miles.`;
+  
+  // Log the day processing event
+  const details = `Traveled ${Math.round(miles)} miles. Resources: Food -${foodUsed}${foodFound > 0 ? ' +' + foodFound : ''}, Water -${waterUsed}${waterFound > 0 ? ' +' + waterFound : ''}, Fodder -${fodderUsed}, Provisions -${provisionUsed}`;
+  logEvent('Day Processed', `Advanced to Day ${newDay}`, details);
+  
+  return `Advanced to Day ${newDay}. Traveled ${Math.round(miles)} miles.`;
 }
 
 /**
@@ -151,19 +167,49 @@ function initializeCompleteCampaign() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const ui = SpreadsheetApp.getUi();
   const response = ui.alert('Confirm Full Reset',
-    'This will DELETE ALL EXISTING SHEETS in this spreadsheet and build a completely new campaign manager. Are you sure you want to continue?',
+    'This will DELETE ALL EXISTING SHEETS in this spreadsheet and build a completely new campaign manager. The Event Log will be preserved. Are you sure you want to continue?',
     ui.ButtonSet.YES_NO);
   if (response !== ui.Button.YES) return;
+  
+  // Preserve Event Log if it exists
+  let eventLogSheet = ss.getSheetByName('Event Log');
+  let eventLogData = null;
+  if (eventLogSheet) {
+    // Save the data
+    const lastRow = eventLogSheet.getLastRow();
+    if (lastRow > 1) {
+      eventLogData = eventLogSheet.getRange(1, 1, lastRow, eventLogSheet.getLastColumn()).getValues();
+    }
+  }
+  
   const tempSheet = ss.insertSheet('temp');
   const allSheets = ss.getSheets();
   allSheets.forEach(sheet => {
-    if (sheet.getName() !== 'temp') {
+    const sheetName = sheet.getName();
+    if (sheetName !== 'temp' && sheetName !== 'Event Log') {
       ss.deleteSheet(sheet);
     }
   });
   createAllSheets(ss);
   createAllNamedRanges(ss);
   addAllFormulas(ss);
+  
+  // Restore or create Event Log
+  if (eventLogSheet) {
+    // Sheet was preserved, just make sure it's set up correctly
+    setupEventLog(eventLogSheet);
+    if (eventLogData && eventLogData.length > 1) {
+      // Restore the data (skip header row)
+      eventLogSheet.getRange(2, 1, eventLogData.length - 1, eventLogData[0].length).setValues(eventLogData.slice(1));
+    }
+  } else {
+    // Create new Event Log
+    eventLogSheet = createOrGetSheet(ss, 'Event Log', '#9c27b0');
+    setupEventLog(eventLogSheet);
+  }
+  
+  // Log the initialization
+  logEvent('Campaign Initialized', 'System reset and all sheets recreated');
   
   ss.deleteSheet(tempSheet);
   
@@ -537,5 +583,100 @@ function setupLog(sheet) {
   sheet.clear();
   sheet.getRange('A1:H1').setValues([['Day', 'Date', 'Miles', 'Food', 'Water', 'Fodder', 'Provisions', 'Notes']]).setFontWeight('bold').setBackground('#e1bee7');
   sheet.setFrozenRows(1);
+}
+
+function setupEventLog(sheet) {
+  // Only set up if the sheet is empty or doesn't have headers
+  if (sheet.getLastRow() === 0) {
+    sheet.getRange('A1:E1').setValues([['Timestamp', 'Day', 'Event Type', 'Description', 'Details']]).setFontWeight('bold').setBackground('#9c27b0');
+    sheet.setFrozenRows(1);
+    // Format header row
+    sheet.getRange('A1:E1').setFontColor('#ffffff');
+    // Set column widths
+    sheet.setColumnWidth(1, 150); // Timestamp
+    sheet.setColumnWidth(2, 60);  // Day
+    sheet.setColumnWidth(3, 120); // Event Type
+    sheet.setColumnWidth(4, 250); // Description
+    sheet.setColumnWidth(5, 300); // Details
+  }
+}
+
+/**
+ * Logs an event to the Event Log sheet. This log persists across campaign resets.
+ * @param {string} eventType The type of event (e.g., 'Day Processed', 'Location Found', 'Combat', etc.)
+ * @param {string} description A brief description of the event
+ * @param {string} details Optional additional details about the event
+ */
+function logEvent(eventType, description, details) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let eventLogSheet = ss.getSheetByName('Event Log');
+    
+    // Create Event Log if it doesn't exist
+    if (!eventLogSheet) {
+      eventLogSheet = createOrGetSheet(ss, 'Event Log', '#9c27b0');
+      setupEventLog(eventLogSheet);
+    }
+    
+    const currentDay = ss.getRangeByName('CurrentDay') ? ss.getRangeByName('CurrentDay').getValue() : 0;
+    const timestamp = new Date();
+    
+    // Append the event
+    eventLogSheet.appendRow([
+      timestamp,
+      currentDay,
+      eventType,
+      description,
+      details || ''
+    ]);
+    
+    // Format the new row
+    const lastRow = eventLogSheet.getLastRow();
+    eventLogSheet.getRange(lastRow, 1).setNumberFormat('yyyy-mm-dd hh:mm:ss');
+    eventLogSheet.getRange(lastRow, 2).setHorizontalAlignment('center');
+    
+  } catch (e) {
+    console.error('Error logging event:', e);
+  }
+}
+
+/**
+ * Prompts the user to log a custom event manually.
+ */
+function logCustomEvent() {
+  const ui = SpreadsheetApp.getUi();
+  
+  const eventTypeResponse = ui.prompt(
+    'Log Custom Event',
+    'Enter the event type (e.g., "Combat", "Location Found", "NPC Encounter"):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  
+  if (eventTypeResponse.getSelectedButton() !== ui.Button.OK) return;
+  const eventType = eventTypeResponse.getResponseText().trim();
+  if (!eventType) return;
+  
+  const descriptionResponse = ui.prompt(
+    'Event Description',
+    'Enter a brief description of the event:',
+    ui.ButtonSet.OK_CANCEL
+  );
+  
+  if (descriptionResponse.getSelectedButton() !== ui.Button.OK) return;
+  const description = descriptionResponse.getResponseText().trim();
+  if (!description) return;
+  
+  const detailsResponse = ui.prompt(
+    'Event Details',
+    'Enter additional details (optional, leave blank to skip):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  
+  const details = detailsResponse.getSelectedButton() === ui.Button.OK 
+    ? detailsResponse.getResponseText().trim() 
+    : '';
+  
+  logEvent(eventType, description, details);
+  ui.alert('Event Logged', 'The event has been added to the Event Log.', ui.ButtonSet.OK);
 }
 
