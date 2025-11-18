@@ -1,0 +1,85 @@
+<script>
+  // --- UTILITY FUNCTIONS ---
+  function showLoading(isLoading) {
+    document.getElementById('process-day-btn').disabled = isLoading;
+    document.getElementById('process-day-btn').textContent = isLoading ? 'Processing...' : 'Process Day';
+  }
+
+  // --- DATA DISPLAY FUNCTIONS ---
+  function updateSidebar(data) {
+    document.getElementById('current-day').textContent = data.currentDay;
+    document.getElementById('total-miles').textContent = Math.round(data.totalMiles);
+    document.getElementById('avg-hp').textContent = data.avgHp;
+    document.getElementById('checks-needed').textContent = data.checksNeeded;
+    document.getElementById('food-status').textContent = `${data.foodDays} days (${data.foodStatus})`;
+    document.getElementById('water-status').textContent = `${data.waterDays} days (${data.waterStatus})`;
+    
+    const alertBox = document.getElementById('alert-box');
+    if (data.alertText && data.alertText.trim() !== '') {
+      alertBox.textContent = data.alertText;
+      alertBox.classList.remove('no-alert');
+    } else {
+      alertBox.textContent = 'All systems normal.';
+      alertBox.classList.add('no-alert');
+    }
+  }
+
+  // --- SERVER CALL HANDLERS ---
+  function onProcessDaySuccess(message) {
+    // After processing, show the message and then refresh the whole sidebar display
+    alert(message); // Simple alert for confirmation
+    fetchData();
+  }
+
+  function onPreviewDaySuccess(preview) {
+    const message = `PREVIEW:\n` +
+      `Miles: ${preview.miles}\n` +
+      `Food: -${preview.food} units\n` +
+      `Water: -${preview.water} units\n` +
+      `Fodder: -${preview.fodder} units\n` +
+      `Provisions: -${preview.provisions} units`;
+    alert(message);
+    showLoading(false); // Re-enable buttons after preview
+  }
+
+  function onFailure(error) {
+    alert('An error occurred: ' + error.message);
+    showLoading(false); // Re-enable buttons on failure
+  }
+  
+  // --- MAIN DATA FETCH FUNCTION ---
+  function fetchData() {
+    showLoading(true);
+    google.script.run
+      .withSuccessHandler(updateSidebar)
+      .withFailureHandler(onFailure)
+      .withUserObject(this) // helps ensure UI enables correctly
+      .getDashboardData();
+  }
+
+  // --- EVENT LISTENERS ---
+  document.addEventListener('DOMContentLoaded', function() {
+    // Initial data load when the sidebar opens
+    fetchData();
+
+    // Attach click handlers to buttons
+    document.getElementById('process-day-btn').addEventListener('click', function() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(onProcessDaySuccess)
+        .withFailureHandler(onFailure)
+        .processDay();
+    });
+
+    document.getElementById('preview-day-btn').addEventListener('click', function() {
+      showLoading(true);
+      google.script.run
+        .withSuccessHandler(onPreviewDaySuccess)
+        .withFailureHandler(onFailure)
+        .previewDay();
+    });
+    
+    document.getElementById('refresh-btn').addEventListener('click', fetchData);
+  });
+</script>
+

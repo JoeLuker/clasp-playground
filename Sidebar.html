@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <?!= include('Stylesheet'); ?>
+  </head>
+  <body>
+    <div class="container">
+      
+      <div class="header">
+        <h2>Campaign Manager</h2>
+      </div>
+      <!-- STATUS SECTION -->
+      <div class="section">
+        <h3>Status</h3>
+        <div class="status-grid">
+          <span>Current Day:</span><span id="current-day">...</span>
+          <span>Total Miles:</span><span id="total-miles">...</span>
+          <span>Avg Party HP:</span><span id="avg-hp">...</span>
+          <span>Checks Needed:</span><span id="checks-needed">...</span>
+        </div>
+      </div>
+      
+      <!-- RESOURCE SECTION -->
+      <div class="section">
+        <h3>Resources</h3>
+        <div class="resource-grid">
+          <span>Food:</span><span id="food-status">... days</span>
+          <span>Water:</span><span id="water-status">... days</span>
+        </div>
+      </div>
+      
+       <!-- ALERT SECTION -->
+      <div class="section">
+        <h3>Alerts</h3>
+        <div id="alert-box" class="alert">
+          Loading alerts...
+        </div>
+      </div>
+      <!-- ACTIONS SECTION -->
+      <div class="section">
+        <h3>Daily Actions</h3>
+        <button id="process-day-btn" class="btn">Process Day</button>
+        <button id="preview-day-btn" class="btn btn-secondary">Preview Day</button>
+      </div>
+      
+      <div class="footer">
+        <button id="refresh-btn">Refresh</button>
+      </div>
+    </div>
+    <?!= include('ClientScript'); ?>
+  </body>
+</html>
+
