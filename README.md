@@ -51,14 +51,56 @@ clasp push
 
 This uploads all your local files to the Apps Script project.
 
-### 5. Set Up the Spreadsheet
+### 5. Connect to a Google Sheet
 
-1. Create a new Google Sheet or use an existing one
-2. In the Apps Script editor (after pushing), go to **Project Settings**
-3. Under **Google Cloud Platform (GCP) Project**, note your project
-4. In your Google Sheet, go to **Extensions > Apps Script**
-5. Make sure the script is attached to your sheet
-6. Run `initializeCompleteCampaign()` from the editor to set up all sheets and named ranges
+**Recommended Method: Create a Sheet-Bound Script**
+
+This is the easiest way - the script will be directly attached to your Google Sheet:
+
+1. **Create a new Google Sheet** (or use an existing one)
+   - Go to [Google Sheets](https://sheets.google.com) and create a new spreadsheet
+   - Give it a name like "Pathfinder Campaign Manager"
+
+2. **Open Apps Script from the Sheet**
+   - In your Google Sheet, click **Extensions > Apps Script**
+   - This opens the Apps Script editor with a script bound to your sheet
+   - You'll see a default `Code.gs` file with a simple function
+
+3. **Get the Script ID**
+   - In the Apps Script editor, click the **Project Settings** icon (⚙️ gear) in the left sidebar
+   - Scroll down to find **Script ID**
+   - Copy the Script ID (it looks like: `1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t`)
+
+4. **Update your local `.clasp.json`**
+   - Open `.clasp.json` in your project
+   - Paste the Script ID:
+   ```json
+   {
+     "scriptId": "YOUR_SCRIPT_ID_HERE",
+     "rootDir": "."
+   }
+   ```
+
+5. **Push your code to the sheet**
+   ```bash
+   clasp push
+   ```
+   - This will upload all your files (Code.gs, Sidebar.html, etc.) to the Apps Script project
+   - The script is now connected to your Google Sheet!
+
+### 6. Initialize the Campaign System
+
+After connecting to your sheet:
+
+1. Open your Google Sheet
+2. Go to **Extensions > Apps Script** (or run `clasp open`)
+3. In the Apps Script editor, select the function `initializeCompleteCampaign` from the dropdown
+4. Click the **Run** button (▶️)
+5. Authorize the script when prompted (first time only)
+6. Go back to your Google Sheet - you should see a **Campaign** menu in the toolbar
+7. Click **Campaign > Initialize/Reset Campaign**
+8. Confirm the reset - this will create all the necessary sheets and named ranges
+9. Once initialized, use **Campaign > Show Campaign Manager** to open the sidebar
 
 ## Development Workflow
 
