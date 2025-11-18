@@ -1,5 +1,6 @@
-# Clasp files
+# Clasp authentication and configuration (sensitive)
 .clasprc.json
+.clasp.json
 
 # Node modules (if you add any npm packages)
 node_modules/
@@ -17,4 +18,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Environment variables
+.env
+.env.local
 

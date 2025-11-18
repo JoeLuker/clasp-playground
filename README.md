@@ -2,6 +2,22 @@
 
 A complete Google Apps Script project for managing Pathfinder campaigns in Google Sheets, developed locally using clasp.
 
+## Getting Started (First Time Setup)
+
+### Clone or Download
+
+If you're cloning this repository:
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd clasp-playground
+   ```
+
+2. **Set up your clasp configuration:**
+   - Copy the example file: `cp .clasp.json.example .clasp.json`
+   - Edit `.clasp.json` and add your Script ID (see instructions below)
+
 ## Setup Instructions
 
 ### 1. Install clasp
@@ -71,7 +87,8 @@ This is the easiest way - the script will be directly attached to your Google Sh
    - Scroll down to find **Script ID**
    - Copy the Script ID (it looks like: `1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r9s0t`)
 
-4. **Update your local `.clasp.json`**
+4. **Set up your local `.clasp.json`**
+   - If you don't have `.clasp.json`, copy the example: `cp .clasp.json.example .clasp.json`
    - Open `.clasp.json` in your project
    - Paste the Script ID:
    ```json
@@ -80,6 +97,7 @@ This is the easiest way - the script will be directly attached to your Google Sh
      "rootDir": "."
    }
    ```
+   - **Note:** `.clasp.json` is gitignored to keep your Script ID private
 
 5. **Push your code to the sheet**
    ```bash
@@ -160,10 +178,40 @@ This opens the Apps Script editor in your browser.
 4. Configure your party, environment, and resources in the sheets
 5. Use the sidebar to process days and monitor status
 
+## GitHub Setup
+
+This project is configured for GitHub with sensitive files excluded:
+
+### Protected Files (in .gitignore)
+- `.clasp.json` - Contains your Script ID (keep private)
+- `.clasprc.json` - Contains authentication tokens (never commit)
+- `node_modules/` - Dependencies
+- `.env` files - Environment variables
+
+### Setting Up GitHub
+
+1. **Create a new repository on GitHub:**
+   - Go to [GitHub](https://github.com/new)
+   - Create a new repository (don't initialize with README if you already have one)
+
+2. **Connect your local repository:**
+   ```bash
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+   git branch -M main
+   git push -u origin main
+   ```
+
+3. **For collaborators:**
+   - They should clone the repo
+   - Copy `.clasp.json.example` to `.clasp.json`
+   - Add their own Script ID
+   - Run `clasp login` to authenticate
+
 ## Notes
 
 - The script creates multiple sheets with color-coded tabs
 - Named ranges are used extensively for formula references
 - The sidebar provides a clean interface for daily operations
 - All calculations are performed in the spreadsheet using formulas
+- Sensitive configuration files are gitignored for security
 
