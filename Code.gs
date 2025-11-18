@@ -194,8 +194,8 @@ function createAllSheets(ss) {
 
 function createAllNamedRanges(ss) {
     const ranges = {
-    'STARVATION_DAYS': 'Constants!B2', 'DEHYDRATION_HOURS': 'Constants!B3', 'SURVIVAL_DC_BASE': 'Constants!B4', 'EXHAUSTION_HOURS': 'Constants!B5', 'HP_CRITICAL': 'Constants!B7', 'HP_BLOODIED': 'Constants!B8', 'HP_WOUNDED': 'Constants!B9', 'DAYS_CRITICAL': 'Constants!B11', 'DAYS_LOW': 'Constants!B12', 'DAYS_GOOD': 'Constants!B13', 'BASE_SPEED': 'Constants!B15', 'FODDER_PER_MOUNT': 'Constants!B16', 'FAST_MULTIPLIER': 'Constants!B17', 'SLOW_MULTIPLIER': 'Constants!B18', 'NORMAL_MULTIPLIER': 'Constants!B19', 'HOT_WATER_MULT': 'Constants!B21', 'SEVERE_HEAT_MULT': 'Constants!B22', 'EXTREME_HEAT_MULT': 'Constants!B23', 'COLD_WATER_MULT': 'Constants!B24', 'MAX_DAYS': 'Constants!B26', 'HOURS_PER_DAY': 'Constants!B27', 'UNREST_PENALTY_MULT': 'Constants!B28',
-    'CurrentDay': 'Dashboard!B4', 'TotalMiles': 'Dashboard!B5', 'Temperature': 'Dashboard!B8', 'Terrain': 'Dashboard!B9', 'Weather': 'Dashboard!B10', 'Altitude': 'Dashboard!B11', 'TravelPace': 'Dashboard!F4', 'AnimalsGrazing': 'Dashboard!F5', 'FoodFound': 'Dashboard!F6', 'WaterFound': 'Dashboard!F7', 'FoodStock': 'Dashboard!B14', 'WaterStock': 'Dashboard!B15', 'FodderStock': 'Dashboard!B16', 'ProvisionStock': 'Dashboard!B17',
+    'STARVATION_DAYS': 'Constants!B2', 'DEHYDRATION_HOURS': 'Constants!B3', 'SURVIVAL_DC_BASE': 'Constants!B4', 'EXHAUSTION_HOURS': 'Constants!B5', 'HP_CRITICAL': 'Constants!B7', 'HP_BLOODIED': 'Constants!B8', 'HP_WOUNDED': 'Constants!B9', 'DAYS_CRITICAL': 'Constants!B11', 'DAYS_LOW': 'Constants!B12', 'DAYS_GOOD': 'Constants!B13', 'BASE_SPEED': 'Constants!B15', 'TRAVEL_HOURS_PER_DAY': 'Constants!B16', 'FODDER_PER_MOUNT': 'Constants!B17', 'FAST_MULTIPLIER': 'Constants!B18', 'SLOW_MULTIPLIER': 'Constants!B19', 'NORMAL_MULTIPLIER': 'Constants!B20', 'HOT_WATER_MULT': 'Constants!B22', 'SEVERE_HEAT_MULT': 'Constants!B23', 'EXTREME_HEAT_MULT': 'Constants!B24', 'COLD_WATER_MULT': 'Constants!B25', 'MAX_DAYS': 'Constants!B27', 'HOURS_PER_DAY': 'Constants!B28', 'UNREST_PENALTY_MULT': 'Constants!B29',
+    'CurrentDay': 'Dashboard!B4', 'TotalMiles': 'Dashboard!B5', 'Temperature': 'Dashboard!B8', 'Terrain': 'Dashboard!B9', 'PathType': 'Dashboard!B10', 'Weather': 'Dashboard!B11', 'Altitude': 'Dashboard!B12', 'TravelPace': 'Dashboard!F4', 'AnimalsGrazing': 'Dashboard!F5', 'FoodFound': 'Dashboard!F6', 'WaterFound': 'Dashboard!F7', 'FoodStock': 'Dashboard!B14', 'WaterStock': 'Dashboard!B15', 'FodderStock': 'Dashboard!B16', 'ProvisionStock': 'Dashboard!B17',
     'CalcBaseSpeed': 'Calculations!B5', 'CalcTerrainMod': 'Calculations!B6', 'CalcPaceMod': 'Calculations!B7', 'CalcWeatherMod': 'Calculations!B8', 'CalcMilesToday': 'Calculations!B9', 'FoodBase': 'Calculations!B13', 'FoodMod': 'Calculations!C13', 'FoodDaily': 'Calculations!D13', 'FoodDaysLeft': 'Calculations!E13', 'FoodStatus': 'Calculations!F13', 'WaterBase': 'Calculations!B14', 'WaterMod': 'Calculations!C14', 'WaterDaily': 'Calculations!D14', 'WaterDaysLeft': 'Calculations!E14', 'WaterStatus': 'Calculations!F14', 'FodderBase': 'Calculations!B15', 'FodderMod': 'Calculations!C15', 'FodderDaily': 'Calculations!D15', 'FodderDaysLeft': 'Calculations!E15', 'FodderStatus': 'Calculations!F15', 'ProvisionBase': 'Calculations!B16', 'ProvisionMod': 'Calculations!C16', 'ProvisionDaily': 'Calculations!D16', 'ProvisionDaysLeft': 'Calculations!E16', 'ProvisionStatus': 'Calculations!F16',
     'Char1_Name': 'Roster!A4', 'Char1_Class': 'Roster!B4', 'Char1_CON': 'Roster!C4', 'Char1_Fort': 'Roster!D4', 'Char1_HP': 'Roster!E4', 'Char1_MaxHP': 'Roster!F4', 'Char1_DaysNoFood': 'Roster!G4', 'Char1_HoursNoWater': 'Roster!H4', 'Char1_HoursNoSleep': 'Roster!I4', 'Char1_CheckNeeded': 'Roster!J4', 'Char1_CheckDC': 'Roster!K4', 'Char1_CheckType': 'Roster!L4', 'Char1_Status': 'Roster!M4',
     'Char2_Name': 'Roster!A5', 'Char2_Class': 'Roster!B5', 'Char2_CON': 'Roster!C5', 'Char2_Fort': 'Roster!D5', 'Char2_HP': 'Roster!E5', 'Char2_MaxHP': 'Roster!F5', 'Char2_DaysNoFood': 'Roster!G5', 'Char2_HoursNoWater': 'Roster!H5', 'Char2_HoursNoSleep': 'Roster!I5', 'Char2_CheckNeeded': 'Roster!J5', 'Char2_CheckDC': 'Roster!K5', 'Char2_CheckType': 'Roster!L5', 'Char2_Status': 'Roster!M5',
@@ -206,7 +206,7 @@ function createAllNamedRanges(ss) {
     'CaravanName': 'Caravan!B4', 'CaravanLevel': 'Caravan!D4', 'CaravanOffense': 'Caravan!B5', 'CaravanDefense': 'Caravan!D5', 'CaravanMobility': 'Caravan!B6', 'CaravanMorale': 'Caravan!D6', 'CaravanUnrest': 'Caravan!B7', 'CaravanMaxUnrest': 'Caravan!D7', 'CaravanFortune': 'Caravan!B8', 'CaravanPrestige': 'Caravan!D8', 'CaravanAttack': 'Caravan!G4', 'CaravanAC': 'Caravan!I4', 'CaravanSecurity': 'Caravan!G5', 'CaravanResolve': 'Caravan!I5', 'CaravanSpeed': 'Caravan!G6', 'CaravanHP': 'Caravan!I6', 'CaravanCargo': 'Caravan!G7', 'CaravanTravelers': 'Caravan!I7', 'CaravanConsumption': 'Caravan!G8',
     'TerritoryName': 'Exploration!B3', 'TerritoryCR': 'Exploration!B4', 'ExplorationDC': 'Exploration!B5', 'ExplorationSkill': 'Exploration!B6', 'CurrentDP': 'Exploration!B7', 'DaysExplored': 'Exploration!B8',
     'StatusFood': 'Status Monitor!B5', 'StatusWater': 'Status Monitor!B6', 'StatusFodder': 'Status Monitor!B7', 'StatusProvision': 'Status Monitor!B8', 'AlertFood': 'Status Monitor!C5', 'AlertWater': 'Status Monitor!C6', 'AlertFodder': 'Status Monitor!C7', 'AlertProvision': 'Status Monitor!C8', 'PartyAvgHP': 'Status Monitor!G5', 'PartyChecks': 'Status Monitor!G6', 'PartyCritical': 'Status Monitor!G7', 'AlertText': 'Status Monitor!A11',
-    'TerrainTable': 'Reference Tables!A3:B10', 'PaceTable': 'Reference Tables!D3:E5', 'TempTable': 'Reference Tables!G3:H9', 'WeatherTable': 'Reference Tables!A13:B18', 'ForageTable': 'Reference Tables!D13:E17', 'AltitudeTable': 'Reference Tables!G13:H16',
+    'TerrainTable': 'Reference Tables!A3:D12', 'PaceTable': 'Reference Tables!F3:G5', 'TempTable': 'Reference Tables!I3:J9', 'WeatherTable': 'Reference Tables!A15:B20', 'ForageTable': 'Reference Tables!D15:E19', 'AltitudeTable': 'Reference Tables!G15:H18',
     'AllCharNames': 'Roster!A4:A15', 'AllCharHP': 'Roster!E4:E15', 'AllCharMaxHP': 'Roster!F4:F15', 'AllCharChecks': 'Roster!J4:J15', 'AllCharStatus': 'Roster!M4:M15', 'AllMountNames': 'Roster!A19:A30', 'AllWagonHP': 'Caravan!C12:C25', 'AllWagonCargo': 'Caravan!E12:E25', 'AllWagonTravelers': 'Caravan!D12:D25', 'AllWagonConsumption': 'Caravan!F12:F25', 'AllTravelerJobs': 'Caravan!I12:I25',
     'PartyHeaders': 'Roster!A3:M3', 'PartyTable': 'Roster!A4:M15', 'MountHeaders': 'Roster!A18:K18', 'MountTable': 'Roster!A19:K30'
   };
@@ -222,7 +222,7 @@ function createAllNamedRanges(ss) {
 function addAllFormulas(ss) {
   const calc = ss.getSheetByName('Calculations');
   calc.getRange('B5').setFormula('=BASE_SPEED');
-  calc.getRange('B6').setFormula('=IFNA(VLOOKUP(Terrain, TerrainTable, 2, FALSE), 1)');
+  calc.getRange('B6').setFormula('=IFNA(IF(PathType="Highway", VLOOKUP(Terrain, TerrainTable, 2, FALSE), IF(PathType="Road or Trail", VLOOKUP(Terrain, TerrainTable, 3, FALSE), VLOOKUP(Terrain, TerrainTable, 4, FALSE))), 1)');
   calc.getRange('B7').setFormula('=IFNA(VLOOKUP(TravelPace, PaceTable, 2, FALSE), 1)');
   calc.getRange('B8').setFormula('=IFNA(VLOOKUP(Weather, WeatherTable, 2, FALSE), 1)');
   calc.getRange('B9').setFormula('=CalcBaseSpeed * CalcTerrainMod * CalcPaceMod * CalcWeatherMod');
@@ -310,7 +310,7 @@ function setupDashboard(sheet) {
   sheet.getRange('A4:C5').setValues([['Current Day:', 1, ''], ['Total Miles:', 0, '']]);
   
   sheet.getRange('A7:C7').merge().setValue('ENVIRONMENT').setFontWeight('bold').setBackground('#e8f0fe');
-  sheet.getRange('A8:C11').setValues([['Temperature:', 'Normal', ''], ['Terrain:', 'Plains', ''], ['Weather:', 'Clear', ''], ['Altitude:', 'Normal', '']]);
+  sheet.getRange('A8:C11').setValues([['Temperature:', 'Normal', ''], ['Terrain:', 'Plains', ''], ['Path Type:', 'Road', ''], ['Weather:', 'Clear', ''], ['Altitude:', 'Normal', '']]);
   
   sheet.getRange('E3:G3').merge().setValue('DAILY ACTIONS').setFontWeight('bold').setBackground('#e8f0fe');
   sheet.getRange('E4:G7').setValues([['Travel Pace:', 'Normal', ''], ['Animals Grazing:', false, ''], ['Food Found:', 0, 'days'], ['Water Found:', 0, 'gallons']]);
@@ -318,8 +318,9 @@ function setupDashboard(sheet) {
   sheet.getRange('A13:C13').merge().setValue('RESOURCE STOCKS').setFontWeight('bold').setBackground('#e8f0fe');
   sheet.getRange('A14:C17').setValues([['Food:', 100, 'days'], ['Water:', 200, 'gallons'], ['Fodder:', 500, 'lbs'], ['Provisions:', 50, 'units']]);
   sheet.getRange('B8').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Extreme Cold', 'Severe Cold', 'Cold', 'Normal', 'Hot', 'Severe Heat', 'Extreme Heat']).build());
-  sheet.getRange('B9').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Plains', 'Forest', 'Hills', 'Mountains', 'Desert', 'Swamp', 'Road', 'Jungle']).build());
-  sheet.getRange('B10').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Clear', 'Light Rain', 'Heavy Rain', 'Storm', 'Snow', 'Blizzard']).build());
+  sheet.getRange('B9').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Desert, sandy', 'Forest', 'Hills', 'Jungle', 'Moor', 'Mountains', 'Plains', 'Swamp', 'Tundra, frozen']).build());
+  sheet.getRange('B10').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Highway', 'Road or Trail', 'Trackless']).build());
+  sheet.getRange('B11').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Clear', 'Light Rain', 'Heavy Rain', 'Storm', 'Snow', 'Blizzard']).build());
   sheet.getRange('F4').setDataValidation(SpreadsheetApp.newDataValidation().requireValueInList(['Slow', 'Normal', 'Fast']).build());
   sheet.getRange('F5').insertCheckboxes();
 }
@@ -375,21 +376,75 @@ function setupConstants(sheet) {
     ['Starvation Days:', 3], ['Dehydration Hours:', 24], ['Survival DC Base:', 10], ['Exhaustion Hours:', 48], ['', ''],
     ['HP Critical %:', 0.25], ['HP Bloodied %:', 0.50], ['HP Wounded %:', 0.75], ['', ''],
     ['Days Critical:', 3], ['Days Low:', 7], ['Days Good:', 14], ['', ''],
-    ['Base Speed:', 24], ['Fodder per Mount:', 20], ['Fast Multiplier:', 1.5], ['Slow Multiplier:', 0.75], ['Normal Multiplier:', 1.0], ['', ''],
+    ['Base Speed (miles/day):', 24], ['Travel Hours/Day:', 8], ['Fodder per Mount:', 20], ['Fast Multiplier:', 1.5], ['Slow Multiplier:', 0.75], ['Normal Multiplier:', 1.0], ['', ''],
     ['Hot Water Mult:', 2.0], ['Severe Heat Mult:', 4.0], ['Extreme Heat Mult:', 6.0], ['Cold Water Mult:', 1.0], ['', ''],
-    ['Max Days Display:', 999], ['Hours per Day:', 24], ['Unrest Penalty Mult:', 1]
+    ['Max Days Display:', 999], ['Hours per Day:', 24], ['Unrest Penalty Mult:', 1], ['', '']
   ]);
 }
 
 function setupReferences(sheet) {
   sheet.clear();
-  sheet.getRange('A1:H1').merge().setValue('REFERENCE TABLES').setFontWeight('bold').setFontSize(16).setHorizontalAlignment('center');
-  sheet.getRange('A2:B10').setValues([['TERRAIN', 'MODIFIER'], ['Plains', 1.0], ['Forest', 0.5], ['Hills', 0.75], ['Mountains', 0.5], ['Desert', 0.75], ['Swamp', 0.5], ['Road', 1.25], ['Jungle', 0.25]]);
-  sheet.getRange('D2:E5').setValues([['PACE', 'MODIFIER'], ['Slow', 0.75], ['Normal', 1.0], ['Fast', 1.25]]);
-  sheet.getRange('G2:H9').setValues([['TEMPERATURE', 'WATER MULT'], ['Extreme Cold', 1.0], ['Severe Cold', 1.0], ['Cold', 1.0], ['Normal', 1.0], ['Hot', 2.0], ['Severe Heat', 4.0], ['Extreme Heat', 6.0]]);
-  sheet.getRange('A12:B18').setValues([['WEATHER', 'MODIFIER'], ['Clear', 1.0], ['Light Rain', 0.9], ['Heavy Rain', 0.75], ['Storm', 0.5], ['Snow', 0.5], ['Blizzard', 0.25]]);
-  sheet.getRange('D12:E17').setValues([['FORAGING', 'DC'], ['Abundant', 10], ['Average', 15], ['Sparse', 20], ['Barren', 25], ['Desolate', 30]]);
-  sheet.getRange('G12:H16').setValues([['ALTITUDE', 'MODIFIER'], ['Normal', 1.0], ['High', 0.9], ['Very High', 0.75], ['Extreme', 0.5]]);
+  sheet.getRange('A1:J1').merge().setValue('REFERENCE TABLES - Pathfinder 1E Rules').setFontWeight('bold').setFontSize(16).setHorizontalAlignment('center');
+  
+  // Terrain Table (Table 7-8: Terrain and Overland Movement)
+  sheet.getRange('A2:D2').setValues([['TERRAIN', 'Highway', 'Road or Trail', 'Trackless']]).setFontWeight('bold').setBackground('#e8f5e9');
+  sheet.getRange('A3:D12').setValues([
+    ['Desert, sandy', 1.0, 0.5, 0.5],
+    ['Forest', 1.0, 1.0, 0.5],
+    ['Hills', 1.0, 0.75, 0.5],
+    ['Jungle', 1.0, 0.75, 0.25],
+    ['Moor', 1.0, 1.0, 0.75],
+    ['Mountains', 0.75, 0.75, 0.5],
+    ['Plains', 1.0, 1.0, 0.75],
+    ['Swamp', 1.0, 0.75, 0.5],
+    ['Tundra, frozen', 1.0, 0.75, 0.75]
+  ]);
+  
+  // Pace Table
+  sheet.getRange('F2:G2').setValues([['PACE', 'MODIFIER']]).setFontWeight('bold').setBackground('#e8f5e9');
+  sheet.getRange('F3:G5').setValues([['Slow', 0.75], ['Normal', 1.0], ['Fast', 1.25]]);
+  
+  // Temperature Table
+  sheet.getRange('I2:J2').setValues([['TEMPERATURE', 'WATER MULT']]).setFontWeight('bold').setBackground('#e8f5e9');
+  sheet.getRange('I3:J9').setValues([
+    ['Extreme Cold', 1.0],
+    ['Severe Cold', 1.0],
+    ['Cold', 1.0],
+    ['Normal', 1.0],
+    ['Hot', 2.0],
+    ['Severe Heat', 4.0],
+    ['Extreme Heat', 6.0]
+  ]);
+  
+  // Weather Table
+  sheet.getRange('A14:B14').setValues([['WEATHER', 'MODIFIER']]).setFontWeight('bold').setBackground('#e8f5e9');
+  sheet.getRange('A15:B20').setValues([
+    ['Clear', 1.0],
+    ['Light Rain', 0.9],
+    ['Heavy Rain', 0.75],
+    ['Storm', 0.5],
+    ['Snow', 0.5],
+    ['Blizzard', 0.25]
+  ]);
+  
+  // Foraging Table
+  sheet.getRange('D14:E14').setValues([['FORAGING', 'DC']]).setFontWeight('bold').setBackground('#e8f5e9');
+  sheet.getRange('D15:E19').setValues([
+    ['Abundant', 10],
+    ['Average', 15],
+    ['Sparse', 20],
+    ['Barren', 25],
+    ['Desolate', 30]
+  ]);
+  
+  // Altitude Table
+  sheet.getRange('G14:H14').setValues([['ALTITUDE', 'MODIFIER']]).setFontWeight('bold').setBackground('#e8f5e9');
+  sheet.getRange('G15:H18').setValues([
+    ['Normal', 1.0],
+    ['High', 0.9],
+    ['Very High', 0.75],
+    ['Extreme', 0.5]
+  ]);
 }
 
 function setupCaravan(sheet) {
