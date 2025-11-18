@@ -204,7 +204,7 @@ function createAllNamedRanges(ss) {
     'PartySize': 'Roster!P4', 'MountCount': 'Roster!P5', 'ChecksNeeded': 'Roster!P6', 'CriticalCount': 'Roster!P7', 'AvgHPPercent': 'Roster!P8', 'TotalSize': 'Roster!P10',
     'Mount1_Name': 'Roster!A19', 'Mount1_Type': 'Roster!B19', 'Mount1_HD': 'Roster!C19', 'Mount1_HP': 'Roster!D19', 'Mount1_MaxHP': 'Roster!E19', 'Mount1_Speed': 'Roster!F19', 'Mount1_Carrying': 'Roster!G19', 'Mount1_MaxLoad': 'Roster!H19', 'Mount1_Grazing': 'Roster!I19', 'Mount1_Status': 'Roster!J19',
     'CaravanName': 'Caravan!B4', 'CaravanLevel': 'Caravan!D4', 'CaravanOffense': 'Caravan!B5', 'CaravanDefense': 'Caravan!D5', 'CaravanMobility': 'Caravan!B6', 'CaravanMorale': 'Caravan!D6', 'CaravanUnrest': 'Caravan!B7', 'CaravanMaxUnrest': 'Caravan!D7', 'CaravanFortune': 'Caravan!B8', 'CaravanPrestige': 'Caravan!D8', 'CaravanAttack': 'Caravan!G4', 'CaravanAC': 'Caravan!I4', 'CaravanSecurity': 'Caravan!G5', 'CaravanResolve': 'Caravan!I5', 'CaravanSpeed': 'Caravan!G6', 'CaravanHP': 'Caravan!I6', 'CaravanCargo': 'Caravan!G7', 'CaravanTravelers': 'Caravan!I7', 'CaravanConsumption': 'Caravan!G8',
-    'TerritoryName': 'Exploration!B3', 'TerritoryCR': 'Exploration!B4', 'ExplorationDC': 'Exploration!B5', 'ExplorationSkill': 'Exploration!B6', 'CurrentDP': 'Exploration!B7', 'DaysExplored': 'Exploration!B8',
+    'TerritoryName': 'Exploration!B4', 'TerritoryCR': 'Exploration!B5', 'ExplorationSkill': 'Exploration!B6', 'ExplorationDC': 'Exploration!B7', 'CurrentDP': 'Exploration!B8', 'DaysExplored': 'Exploration!B9',
     'StatusFood': 'Status Monitor!B5', 'StatusWater': 'Status Monitor!B6', 'StatusFodder': 'Status Monitor!B7', 'StatusProvision': 'Status Monitor!B8', 'AlertFood': 'Status Monitor!C5', 'AlertWater': 'Status Monitor!C6', 'AlertFodder': 'Status Monitor!C7', 'AlertProvision': 'Status Monitor!C8', 'PartyAvgHP': 'Status Monitor!G5', 'PartyChecks': 'Status Monitor!G6', 'PartyCritical': 'Status Monitor!G7', 'AlertText': 'Status Monitor!A11',
     'TerrainTable': 'Reference Tables!A3:D12', 'PaceTable': 'Reference Tables!F3:G5', 'TempTable': 'Reference Tables!I3:J9', 'WeatherTable': 'Reference Tables!A15:B20', 'ForageTable': 'Reference Tables!D15:E19', 'AltitudeTable': 'Reference Tables!G15:H18',
     'AllCharNames': 'Roster!A4:A15', 'AllCharHP': 'Roster!E4:E15', 'AllCharMaxHP': 'Roster!F4:F15', 'AllCharChecks': 'Roster!J4:J15', 'AllCharStatus': 'Roster!M4:M15', 'AllMountNames': 'Roster!A19:A30', 'AllWagonHP': 'Caravan!C12:C25', 'AllWagonCargo': 'Caravan!E12:E25', 'AllWagonTravelers': 'Caravan!D12:D25', 'AllWagonConsumption': 'Caravan!F12:F25', 'AllTravelerJobs': 'Caravan!I12:I25',
@@ -286,7 +286,16 @@ function addAllFormulas(ss) {
   status.getRange('G7').setFormula('=CriticalCount');
   status.getRange('A11').setFormula('=TRIM(CONCATENATE(IF(FoodStatus = "CRITICAL", "Food CRITICAL! ", ""), IF(WaterStatus = "CRITICAL", "Water CRITICAL! ", ""), IF(FodderStatus = "CRITICAL", "Fodder CRITICAL! ", ""), IF(ChecksNeeded > 0, ChecksNeeded & " checks needed! ", ""), IF(CriticalCount > 0, CriticalCount & " members critical! ", ""), IF(CaravanUnrest > CaravanMorale, "MUTINY RISK!", "")))');
   const exploration = ss.getSheetByName('Exploration');
-  exploration.getRange('B5').setFormula('=16 + TerritoryCR');
+  // Exploration DC lookup based on Territory CR (Table 4-1: Exploration DCs)
+  exploration.getRange('B7').setFormula('=IFNA(VLOOKUP(TerritoryCR, D5:E24, 2, FALSE), 16 + TerritoryCR)');
+  // Location discovery scores (Base + Terrain Mod + Hidden Mod)
+  exploration.getRange('E13').setFormula('=B13+C13+D13');
+  exploration.getRange('E14').setFormula('=B14+C14+D14');
+  exploration.getRange('E15').setFormula('=IF(B15<>"", B15+C15+D15, "")');
+  // Way Sign DCs based on complexity
+  exploration.getRange('C24').setFormula('=IF(B24="Simple", TerritoryCR+10, IF(B24="Moderate", TerritoryCR+15, IF(B24="Complex", TerritoryCR+20, "")))');
+  exploration.getRange('C25').setFormula('=IF(B25="Simple", TerritoryCR+10, IF(B25="Moderate", TerritoryCR+15, IF(B25="Complex", TerritoryCR+20, "")))');
+  exploration.getRange('C26').setFormula('=IF(B26="Simple", TerritoryCR+10, IF(B26="Moderate", TerritoryCR+15, IF(B26="Complex", TerritoryCR+20, "")))');
 }
 
 // ============= HELPER AND SHEET SETUP FUNCTIONS =============
@@ -464,12 +473,64 @@ function setupCaravan(sheet) {
 
 function setupExploration(sheet) {
   sheet.clear();
-  sheet.getRange('A1:F1').merge().setValue('EXPLORATION TRACKER').setFontWeight('bold').setFontSize(16).setHorizontalAlignment('center');
-  sheet.getRange('A3:B8').setValues([['Territory:', 'Darkwood'], ['CR:', 5], ['DC:', ''], ['Skill:', 'Survival'], ['Current DP:', 0], ['Days Explored:', 0]]);
-  sheet.getRange('A10').setValue('LOCATIONS').setFontWeight('bold');
-  sheet.getRange('A11:E11').setValues([['Name', 'Base', 'Modifiers', 'Final', 'Status']]);
-  sheet.getRange('A20').setValue('WAY SIGNS').setFontWeight('bold');
-  sheet.getRange('A21:D21').setValues([['Description', 'Complexity', 'DP', 'Status']]);
+  sheet.getRange('A1:J1').merge().setValue('EXPLORATION TRACKER - Pathfinder 1E Rules').setFontWeight('bold').setFontSize(16).setHorizontalAlignment('center');
+  
+  // Territory Info Section
+  sheet.getRange('A3:B3').merge().setValue('TERRITORY INFORMATION').setFontWeight('bold').setBackground('#e1f5fe');
+  sheet.getRange('A4:B9').setValues([
+    ['Territory Name:', 'Darkwood'],
+    ['Territory CR:', 5],
+    ['Exploration Skill:', 'Survival'],
+    ['Exploration DC:', ''],
+    ['Current Discovery Points:', 0],
+    ['Days Explored:', 0]
+  ]);
+  
+  // Exploration DC Reference Table (Table 4-1)
+  sheet.getRange('D3:F3').merge().setValue('EXPLORATION DC REFERENCE').setFontWeight('bold').setBackground('#e1f5fe');
+  sheet.getRange('D4:F4').setValues([['CR', 'DC', '']]).setFontWeight('bold');
+  sheet.getRange('D5:F24').setValues([
+    [1, 17, ''], [2, 19, ''], [3, 21, ''], [4, 22, ''], [5, 23, ''],
+    [6, 24, ''], [7, 25, ''], [8, 26, ''], [9, 27, ''], [10, 28, ''],
+    [11, 29, ''], [12, 30, ''], [13, 31, ''], [14, 32, ''], [15, 33, ''],
+    [16, 34, ''], [17, 35, ''], [18, 36, ''], [19, 37, ''], [20, 38, '']
+  ]);
+  
+  // Locations Section
+  sheet.getRange('A11').setValue('LOCATIONS').setFontWeight('bold').setBackground('#fff3e0');
+  sheet.getRange('A12:F12').setValues([['Name', 'Base Score', 'Terrain Mod', 'Hidden Mod', 'Final Score', 'Status']]).setFontWeight('bold');
+  sheet.getRange('A13:F15').setValues([
+    ['Hidden Temple', 6, 2, 4, '', 'Undiscovered'],
+    ['Ancient Ruins', 3, 2, 0, '', 'Undiscovered'],
+    ['', '', '', '', '', '']
+  ]);
+  
+  // Discovery Score Modifiers Reference (Table 4-2)
+  sheet.getRange('H11').setValue('DISCOVERY SCORE MODIFIERS').setFontWeight('bold').setBackground('#fff3e0');
+  sheet.getRange('H12:I12').setValues([['Condition', 'Modifier']]).setFontWeight('bold');
+  sheet.getRange('H13:I20').setValues([
+    ['Desert or plains terrain', '+1'],
+    ['Forest, hills, or marsh terrain', '+2'],
+    ['Mountain terrain', '+3'],
+    ['Location is traveled to/from often', '-4'],
+    ['Location is mobile', '+4'],
+    ['Location is unusually large', '-2'],
+    ['Location is unusually small', '+2'],
+    ['Location is deliberately hidden', '+2 to +6']
+  ]);
+  
+  // Way Signs Section
+  sheet.getRange('A22').setValue('WAY SIGNS').setFontWeight('bold').setBackground('#e8f5e9');
+  sheet.getRange('A23:F23').setValues([['Description', 'Complexity', 'DC', 'Discovery Points', 'Status', 'Notes']]).setFontWeight('bold');
+  sheet.getRange('A24:F26').setValues([
+    ['Old Map Found', 'Simple', '', 1, 'Undiscovered', 'CR + 10'],
+    ['Traveler\'s Journal', 'Moderate', '', 3, 'Undiscovered', 'CR + 15'],
+    ['Aerial Reconnaissance', 'Complex', '', 5, 'Undiscovered', 'CR + 20']
+  ]);
+  
+  // Exploration Actions Log
+  sheet.getRange('A28').setValue('EXPLORATION LOG').setFontWeight('bold').setBackground('#f3e5f5');
+  sheet.getRange('A29:F29').setValues([['Day', 'Action', 'Skill Check', 'Result', 'DP Gained', 'Notes']]).setFontWeight('bold');
 }
 
 function setupLog(sheet) {
