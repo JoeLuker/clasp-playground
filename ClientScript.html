@@ -5,6 +5,13 @@
     document.getElementById('process-day-btn').textContent = isLoading ? 'Processing...' : 'Process Day';
   }
 
+  // --- UTILITY FUNCTIONS ---
+  function toggleSection(header) {
+    const content = header.nextElementSibling;
+    content.classList.toggle('active');
+    header.textContent = header.textContent.replace('▼', '').replace('▶', '') + (content.classList.contains('active') ? ' ▼' : ' ▶');
+  }
+
   // --- DATA DISPLAY FUNCTIONS ---
   function updateSidebar(data) {
     document.getElementById('current-day').textContent = data.currentDay;
@@ -13,6 +20,14 @@
     document.getElementById('checks-needed').textContent = data.checksNeeded;
     document.getElementById('food-status').textContent = `${data.foodDays} days (${data.foodStatus})`;
     document.getElementById('water-status').textContent = `${data.waterDays} days (${data.waterStatus})`;
+    
+    // Update form values
+    if (data.temperature) document.getElementById('temperature-select').value = data.temperature;
+    if (data.terrain) document.getElementById('terrain-select').value = data.terrain;
+    if (data.pathType) document.getElementById('path-type-select').value = data.pathType;
+    if (data.weather) document.getElementById('weather-select').value = data.weather;
+    if (data.travelPace) document.getElementById('pace-select').value = data.travelPace;
+    if (data.animalsGrazing !== undefined) document.getElementById('animals-grazing').checked = data.animalsGrazing;
     
     const alertBox = document.getElementById('alert-box');
     if (data.alertText && data.alertText.trim() !== '') {
@@ -80,6 +95,47 @@
     });
     
     document.getElementById('refresh-btn').addEventListener('click', fetchData);
+    
+    // Update resources button
+    document.getElementById('update-resources-btn').addEventListener('click', function() {
+      const foodFound = parseFloat(document.getElementById('food-found').value) || 0;
+      const waterFound = parseFloat(document.getElementById('water-found').value) || 0;
+      
+      if (foodFound === 0 && waterFound === 0) {
+        alert('Please enter at least one resource value.');
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(function() {
+          document.getElementById('food-found').value = '';
+          document.getElementById('water-found').value = '';
+          fetchData();
+          alert('Resources updated!');
+        })
+        .withFailureHandler(onFailure)
+        .updateResourcesFound(foodFound, waterFound);
+    });
+    
+    // Update environment button
+    document.getElementById('update-environment-btn').addEventListener('click', function() {
+      const environment = {
+        temperature: document.getElementById('temperature-select').value,
+        terrain: document.getElementById('terrain-select').value,
+        pathType: document.getElementById('path-type-select').value,
+        weather: document.getElementById('weather-select').value,
+        travelPace: document.getElementById('pace-select').value,
+        animalsGrazing: document.getElementById('animals-grazing').checked
+      };
+      
+      google.script.run
+        .withSuccessHandler(function() {
+          fetchData();
+          alert('Environment updated!');
+        })
+        .withFailureHandler(onFailure)
+        .updateEnvironment(environment);
+    });
   });
 </script>
 

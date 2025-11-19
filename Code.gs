@@ -51,7 +51,10 @@ function getDashboardData() {
       totalMiles: ss.getRangeByName('TotalMiles').getValue(),
       temperature: ss.getRangeByName('Temperature').getValue(),
       terrain: ss.getRangeByName('Terrain').getValue(),
+      pathType: ss.getRangeByName('PathType').getValue(),
       weather: ss.getRangeByName('Weather').getValue(),
+      travelPace: ss.getRangeByName('TravelPace').getValue(),
+      animalsGrazing: ss.getRangeByName('AnimalsGrazing').getValue(),
       foodDays: ss.getRangeByName('FoodDaysLeft').getValue(),
       foodStatus: ss.getRangeByName('FoodStatus').getValue(),
       waterDays: ss.getRangeByName('WaterDaysLeft').getValue(),
@@ -64,6 +67,46 @@ function getDashboardData() {
   } catch (e) {
     return { error: "Sheet not initialized. Please run 'Initialize/Reset Campaign' from the menu." };
   }
+}
+
+/**
+ * Updates the resources found values.
+ * @param {number} foodFound Amount of food found (in days)
+ * @param {number} waterFound Amount of water found (in gallons)
+ * @returns {string} Confirmation message
+ */
+function updateResourcesFound(foodFound, waterFound) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  if (foodFound > 0) {
+    ss.getRangeByName('FoodFound').setValue(foodFound);
+    logEvent('Resource Found', `Found ${foodFound} days of food`, '');
+  }
+  if (waterFound > 0) {
+    ss.getRangeByName('WaterFound').setValue(waterFound);
+    logEvent('Resource Found', `Found ${waterFound} gallons of water`, '');
+  }
+  return 'Resources updated successfully';
+}
+
+/**
+ * Updates environment settings from the sidebar.
+ * @param {object} environment Object containing temperature, terrain, pathType, weather, travelPace, animalsGrazing
+ * @returns {string} Confirmation message
+ */
+function updateEnvironment(environment) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ss.getRangeByName('Temperature').setValue(environment.temperature);
+  ss.getRangeByName('Terrain').setValue(environment.terrain);
+  ss.getRangeByName('PathType').setValue(environment.pathType);
+  ss.getRangeByName('Weather').setValue(environment.weather);
+  ss.getRangeByName('TravelPace').setValue(environment.travelPace);
+  ss.getRangeByName('AnimalsGrazing').setValue(environment.animalsGrazing);
+  
+  logEvent('Environment Changed', 
+    `${environment.terrain} terrain, ${environment.weather} weather, ${environment.travelPace} pace`,
+    `Temperature: ${environment.temperature}, Path: ${environment.pathType}, Grazing: ${environment.animalsGrazing ? 'Yes' : 'No'}`);
+  
+  return 'Environment updated successfully';
 }
 
 // ============= ACTION FUNCTIONS CALLED BY SIDEBAR =============

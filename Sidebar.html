@@ -28,6 +28,77 @@
           <span>Food:</span><span id="food-status">... days</span>
           <span>Water:</span><span id="water-status">... days</span>
         </div>
+        <div class="quick-actions">
+          <input type="number" id="food-found" placeholder="Food found" min="0" step="0.1">
+          <input type="number" id="water-found" placeholder="Water found" min="0" step="0.1">
+          <button id="update-resources-btn" class="btn-small">Update Resources</button>
+        </div>
+      </div>
+      
+      <!-- ENVIRONMENT SECTION -->
+      <div class="section collapsible">
+        <h3 onclick="toggleSection(this)">Environment Settings ▼</h3>
+        <div class="section-content" id="environment-section">
+          <div class="form-group">
+            <label>Temperature:</label>
+            <select id="temperature-select">
+              <option value="Extreme Cold">Extreme Cold</option>
+              <option value="Severe Cold">Severe Cold</option>
+              <option value="Cold">Cold</option>
+              <option value="Normal" selected>Normal</option>
+              <option value="Hot">Hot</option>
+              <option value="Severe Heat">Severe Heat</option>
+              <option value="Extreme Heat">Extreme Heat</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Terrain:</label>
+            <select id="terrain-select">
+              <option value="Desert, sandy">Desert, sandy</option>
+              <option value="Forest">Forest</option>
+              <option value="Hills">Hills</option>
+              <option value="Jungle">Jungle</option>
+              <option value="Moor">Moor</option>
+              <option value="Mountains">Mountains</option>
+              <option value="Plains" selected>Plains</option>
+              <option value="Swamp">Swamp</option>
+              <option value="Tundra, frozen">Tundra, frozen</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Path Type:</label>
+            <select id="path-type-select">
+              <option value="Highway">Highway</option>
+              <option value="Road or Trail" selected>Road or Trail</option>
+              <option value="Trackless">Trackless</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Weather:</label>
+            <select id="weather-select">
+              <option value="Clear" selected>Clear</option>
+              <option value="Light Rain">Light Rain</option>
+              <option value="Heavy Rain">Heavy Rain</option>
+              <option value="Storm">Storm</option>
+              <option value="Snow">Snow</option>
+              <option value="Blizzard">Blizzard</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Travel Pace:</label>
+            <select id="pace-select">
+              <option value="Slow">Slow</option>
+              <option value="Normal" selected>Normal</option>
+              <option value="Fast">Fast</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="animals-grazing"> Animals Grazing
+            </label>
+          </div>
+          <button id="update-environment-btn" class="btn-small">Update Environment</button>
+        </div>
       </div>
       
        <!-- ALERT SECTION -->
