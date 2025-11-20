@@ -520,7 +520,7 @@ function setupStatus(sheet) {
 function setupConstants(sheet) {
   sheet.clear();
   sheet.getRange('A1:B1').merge().setValue('GAME CONSTANTS').setFontWeight('bold').setFontSize(14);
-  sheet.getRange('A2:B28').setValues([
+  sheet.getRange('A2:B30').setValues([
     ['Starvation Days:', 3], ['Dehydration Hours:', 24], ['Survival DC Base:', 10], ['Exhaustion Hours:', 48], ['', ''],
     ['HP Critical %:', 0.25], ['HP Bloodied %:', 0.50], ['HP Wounded %:', 0.75], ['', ''],
     ['Days Critical:', 3], ['Days Low:', 7], ['Days Good:', 14], ['', ''],
