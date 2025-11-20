@@ -27,14 +27,24 @@ function importHexMapPrompt() {
   const ui = SpreadsheetApp.getUi();
   const response = ui.prompt(
     'Import Hex Map',
-    'Paste the JSON data from your hex map editor:',
+    'Paste the JSON data from your hex map editor.\n\nNote: If your JSON is very large, the prompt may truncate it. In that case, you can:\n1. Save the JSON to a text file\n2. Use the Apps Script editor to call importHexMap() directly with the JSON string\n\nPaste JSON here:',
     ui.ButtonSet.OK_CANCEL
   );
   
   if (response.getSelectedButton() === ui.Button.OK) {
-    const jsonData = response.getResponseText();
-    const result = importHexMap(jsonData);
-    ui.alert('Import Result', result, ui.ButtonSet.OK);
+    const jsonData = response.getResponseText().trim();
+    if (!jsonData) {
+      ui.alert('Error', 'No JSON data provided.', ui.ButtonSet.OK);
+      return;
+    }
+    
+    try {
+      const result = importHexMap(jsonData);
+      ui.alert('Import Result', result, ui.ButtonSet.OK);
+    } catch (e) {
+      ui.alert('Import Error', `Failed to import hex map: ${e.message}\n\nMake sure the JSON is valid and complete.`, ui.ButtonSet.OK);
+      Logger.log('Hex map import error: ' + e.toString());
+    }
   }
 }
 
@@ -785,13 +795,37 @@ function logEvent(eventType, description, details) {
 function importHexMap(jsonData) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const hexMapSheet = ss.getSheetByName('Hex Map');
-    if (!hexMapSheet) {
-      return 'Error: Hex Map sheet not found. Please initialize the campaign first.';
+    if (!ss) {
+      throw new Error('Cannot access spreadsheet. Please ensure the script is bound to a Google Sheet.');
     }
     
-    const mapData = JSON.parse(jsonData);
-    const hexes = mapData.terrain?.hexes || {};
+    const hexMapSheet = ss.getSheetByName('Hex Map');
+    if (!hexMapSheet) {
+      throw new Error('Hex Map sheet not found. Please run "Initialize/Reset Campaign" first.');
+    }
+    
+    // Validate and parse JSON
+    if (!jsonData || jsonData.trim() === '') {
+      throw new Error('Empty JSON data provided.');
+    }
+    
+    let mapData;
+    try {
+      mapData = JSON.parse(jsonData);
+    } catch (parseError) {
+      throw new Error(`Invalid JSON format: ${parseError.message}`);
+    }
+    
+    if (!mapData.terrain || !mapData.terrain.hexes) {
+      throw new Error('JSON does not contain terrain.hexes data. Make sure you copied the complete map JSON.');
+    }
+    
+    const hexes = mapData.terrain.hexes;
+    const hexCount = Object.keys(hexes).length;
+    
+    if (hexCount === 0) {
+      throw new Error('No hex data found in the JSON.');
+    }
     
     // Clear existing hex data (keep headers and current location)
     const lastRow = hexMapSheet.getLastRow();
@@ -803,6 +837,10 @@ function importHexMap(jsonData) {
     const hexRows = [];
     Object.keys(hexes).forEach(hexKey => {
       const hex = hexes[hexKey];
+      if (!hex || typeof hex.q === 'undefined' || typeof hex.r === 'undefined' || typeof hex.s === 'undefined') {
+        Logger.log(`Skipping invalid hex: ${hexKey}`);
+        return;
+      }
       const mapTerrain = hex.tile?.tile_name || '';
       const pfTerrain = mapTerrainToPathfinder(mapTerrain);
       hexRows.push([
@@ -812,25 +850,39 @@ function importHexMap(jsonData) {
       ]);
     });
     
-    // Sort by q, then r, then s
-    hexRows.sort((a, b) => {
-      const [q1, r1, s1] = a[0].split(':').map(Number);
-      const [q2, r2, s2] = b[0].split(':').map(Number);
-      if (q1 !== q2) return q1 - q2;
-      if (r1 !== r2) return r1 - r2;
-      return s1 - s2;
-    });
-    
-    // Write hex data
-    if (hexRows.length > 0) {
-      hexMapSheet.getRange(5, 4, hexRows.length, 3).setValues(hexRows);
+    if (hexRows.length === 0) {
+      throw new Error('No valid hex data could be extracted from the JSON.');
     }
     
-    logEvent('Hex Map Imported', `Imported ${hexRows.length} hexes from ${mapData.metadata?.title || 'map'}`, '');
+    // Sort by q, then r, then s
+    hexRows.sort((a, b) => {
+      try {
+        const [q1, r1, s1] = a[0].split(':').map(Number);
+        const [q2, r2, s2] = b[0].split(':').map(Number);
+        if (q1 !== q2) return q1 - q2;
+        if (r1 !== r2) return r1 - r2;
+        return s1 - s2;
+      } catch (e) {
+        return 0;
+      }
+    });
     
-    return `Successfully imported ${hexRows.length} hexes from the map.`;
+    // Write hex data in batches if needed (to avoid timeout)
+    if (hexRows.length > 0) {
+      const batchSize = 1000;
+      for (let i = 0; i < hexRows.length; i += batchSize) {
+        const batch = hexRows.slice(i, i + batchSize);
+        const startRow = 5 + i;
+        hexMapSheet.getRange(startRow, 4, batch.length, 3).setValues(batch);
+      }
+    }
+    
+    logEvent('Hex Map Imported', `Imported ${hexRows.length} hexes from ${mapData.metadata?.title || 'map'}`, `Total hexes in JSON: ${hexCount}`);
+    
+    return `Successfully imported ${hexRows.length} hexes from "${mapData.metadata?.title || 'the map'}".`;
   } catch (e) {
-    return `Error importing hex map: ${e.message}`;
+    Logger.log('Hex map import error: ' + e.toString());
+    throw e; // Re-throw so the calling function can handle it
   }
 }
 
