@@ -345,7 +345,7 @@ function createAllNamedRanges(ss) {
     'CaravanName': 'Caravan!B4', 'CaravanLevel': 'Caravan!D4', 'CaravanOffense': 'Caravan!B5', 'CaravanDefense': 'Caravan!D5', 'CaravanMobility': 'Caravan!B6', 'CaravanMorale': 'Caravan!D6', 'CaravanUnrest': 'Caravan!B7', 'CaravanMaxUnrest': 'Caravan!D7', 'CaravanFortune': 'Caravan!B8', 'CaravanPrestige': 'Caravan!D8', 'CaravanAttack': 'Caravan!G4', 'CaravanAC': 'Caravan!I4', 'CaravanSecurity': 'Caravan!G5', 'CaravanResolve': 'Caravan!I5', 'CaravanSpeed': 'Caravan!G6', 'CaravanHP': 'Caravan!I6', 'CaravanCargo': 'Caravan!G7', 'CaravanTravelers': 'Caravan!I7', 'CaravanConsumption': 'Caravan!G8',
     'TerritoryName': 'Exploration!B4', 'TerritoryCR': 'Exploration!B5', 'ExplorationSkill': 'Exploration!B6', 'ExplorationDC': 'Exploration!B7', 'CurrentDP': 'Exploration!B8', 'DaysExplored': 'Exploration!B9',
     'StatusFood': 'Status Monitor!B5', 'StatusWater': 'Status Monitor!B6', 'StatusFodder': 'Status Monitor!B7', 'StatusProvision': 'Status Monitor!B8', 'AlertFood': 'Status Monitor!C5', 'AlertWater': 'Status Monitor!C6', 'AlertFodder': 'Status Monitor!C7', 'AlertProvision': 'Status Monitor!C8', 'PartyAvgHP': 'Status Monitor!G5', 'PartyChecks': 'Status Monitor!G6', 'PartyCritical': 'Status Monitor!G7', 'AlertText': 'Status Monitor!A11',
-    'TerrainTable': 'Reference Tables!A3:D12', 'PaceTable': 'Reference Tables!F3:G5', 'TempTable': 'Reference Tables!I3:J9', 'WeatherTable': 'Reference Tables!A15:B20', 'ForageTable': 'Reference Tables!D15:E19', 'AltitudeTable': 'Reference Tables!G15:H18',
+    'TerrainTable': 'Reference Tables!A3:D11', 'PaceTable': 'Reference Tables!F3:G5', 'TempTable': 'Reference Tables!I3:J9', 'WeatherTable': 'Reference Tables!A15:B20', 'ForageTable': 'Reference Tables!D15:E19', 'AltitudeTable': 'Reference Tables!G15:H18',
     'AllCharNames': 'Roster!A4:A15', 'AllCharHP': 'Roster!E4:E15', 'AllCharMaxHP': 'Roster!F4:F15', 'AllCharChecks': 'Roster!J4:J15', 'AllCharStatus': 'Roster!M4:M15', 'AllMountNames': 'Roster!A19:A30', 'AllWagonHP': 'Caravan!C12:C25', 'AllWagonCargo': 'Caravan!E12:E25', 'AllWagonTravelers': 'Caravan!D12:D25', 'AllWagonConsumption': 'Caravan!F12:F25', 'AllTravelerJobs': 'Caravan!I12:I25',
     'PartyHeaders': 'Roster!A3:M3', 'PartyTable': 'Roster!A4:M15', 'MountHeaders': 'Roster!A18:K18', 'MountTable': 'Roster!A19:K30'
   };
@@ -536,7 +536,7 @@ function setupReferences(sheet) {
   
   // Terrain Table (Table 7-8: Terrain and Overland Movement)
   sheet.getRange('A2:D2').setValues([['TERRAIN', 'Highway', 'Road or Trail', 'Trackless']]).setFontWeight('bold').setBackground('#e8f5e9');
-  sheet.getRange('A3:D12').setValues([
+  sheet.getRange('A3:D11').setValues([
     ['Desert, sandy', 1.0, 0.5, 0.5],
     ['Forest', 1.0, 1.0, 0.5],
     ['Hills', 1.0, 0.75, 0.5],
