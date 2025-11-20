@@ -14,7 +14,46 @@ function onOpen() {
     .addItem('Initialize/Reset Campaign', 'initializeCompleteCampaign')
     .addSeparator()
     .addItem('Log Custom Event', 'logCustomEvent')
+    .addSeparator()
+    .addItem('Import Hex Map', 'importHexMapPrompt')
+    .addItem('Set Current Hex', 'setCurrentHexPrompt')
     .addToUi();
+}
+
+/**
+ * Prompts user to import hex map JSON data.
+ */
+function importHexMapPrompt() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.prompt(
+    'Import Hex Map',
+    'Paste the JSON data from your hex map editor:',
+    ui.ButtonSet.OK_CANCEL
+  );
+  
+  if (response.getSelectedButton() === ui.Button.OK) {
+    const jsonData = response.getResponseText();
+    const result = importHexMap(jsonData);
+    ui.alert('Import Result', result, ui.ButtonSet.OK);
+  }
+}
+
+/**
+ * Prompts user to set current hex location.
+ */
+function setCurrentHexPrompt() {
+  const ui = SpreadsheetApp.getUi();
+  const response = ui.prompt(
+    'Set Current Hex',
+    'Enter hex coordinates (format: q:r:s, e.g., 0:0:0):',
+    ui.ButtonSet.OK_CANCEL
+  );
+  
+  if (response.getSelectedButton() === ui.Button.OK) {
+    const hexCoords = response.getResponseText().trim();
+    const result = setCurrentHex(hexCoords);
+    ui.alert('Location Updated', result, ui.ButtonSet.OK);
+  }
 }
 
 /**
@@ -270,6 +309,7 @@ function createAllSheets(ss) {
   const caravan = createOrGetSheet(ss, 'Caravan', '#ff6f00');
   const exploration = createOrGetSheet(ss, 'Exploration', '#00897b');
   const log = createOrGetSheet(ss, 'Log', '#673ab7');
+  const hexMap = createOrGetSheet(ss, 'Hex Map', '#00bcd4');
   setupDashboard(dashboard);
   setupCalculations(calculations);
   setupRoster(roster);
@@ -279,12 +319,13 @@ function createAllSheets(ss) {
   setupCaravan(caravan);
   setupExploration(exploration);
   setupLog(log);
+  setupHexMap(hexMap);
 }
 
 function createAllNamedRanges(ss) {
     const ranges = {
     'STARVATION_DAYS': 'Constants!B2', 'DEHYDRATION_HOURS': 'Constants!B3', 'SURVIVAL_DC_BASE': 'Constants!B4', 'EXHAUSTION_HOURS': 'Constants!B5', 'HP_CRITICAL': 'Constants!B7', 'HP_BLOODIED': 'Constants!B8', 'HP_WOUNDED': 'Constants!B9', 'DAYS_CRITICAL': 'Constants!B11', 'DAYS_LOW': 'Constants!B12', 'DAYS_GOOD': 'Constants!B13', 'BASE_SPEED': 'Constants!B15', 'TRAVEL_HOURS_PER_DAY': 'Constants!B16', 'FODDER_PER_MOUNT': 'Constants!B17', 'FAST_MULTIPLIER': 'Constants!B18', 'SLOW_MULTIPLIER': 'Constants!B19', 'NORMAL_MULTIPLIER': 'Constants!B20', 'HOT_WATER_MULT': 'Constants!B22', 'SEVERE_HEAT_MULT': 'Constants!B23', 'EXTREME_HEAT_MULT': 'Constants!B24', 'COLD_WATER_MULT': 'Constants!B25', 'MAX_DAYS': 'Constants!B27', 'HOURS_PER_DAY': 'Constants!B28', 'UNREST_PENALTY_MULT': 'Constants!B29',
-    'CurrentDay': 'Dashboard!B4', 'TotalMiles': 'Dashboard!B5', 'Temperature': 'Dashboard!B8', 'Terrain': 'Dashboard!B9', 'PathType': 'Dashboard!B10', 'Weather': 'Dashboard!B11', 'Altitude': 'Dashboard!B12', 'TravelPace': 'Dashboard!F4', 'AnimalsGrazing': 'Dashboard!F5', 'FoodFound': 'Dashboard!F6', 'WaterFound': 'Dashboard!F7', 'FoodStock': 'Dashboard!B14', 'WaterStock': 'Dashboard!B15', 'FodderStock': 'Dashboard!B16', 'ProvisionStock': 'Dashboard!B17',
+    'CurrentDay': 'Dashboard!B4', 'TotalMiles': 'Dashboard!B5', 'CurrentHex': 'Hex Map!B4', 'HexTerrain': 'Hex Map!B5', 'Temperature': 'Dashboard!B8', 'Terrain': 'Dashboard!B9', 'PathType': 'Dashboard!B10', 'Weather': 'Dashboard!B11', 'Altitude': 'Dashboard!B12', 'TravelPace': 'Dashboard!F4', 'AnimalsGrazing': 'Dashboard!F5', 'FoodFound': 'Dashboard!F6', 'WaterFound': 'Dashboard!F7', 'FoodStock': 'Dashboard!B14', 'WaterStock': 'Dashboard!B15', 'FodderStock': 'Dashboard!B16', 'ProvisionStock': 'Dashboard!B17',
     'CalcBaseSpeed': 'Calculations!B5', 'CalcTerrainMod': 'Calculations!B6', 'CalcPaceMod': 'Calculations!B7', 'CalcWeatherMod': 'Calculations!B8', 'CalcMilesToday': 'Calculations!B9', 'FoodBase': 'Calculations!B13', 'FoodMod': 'Calculations!C13', 'FoodDaily': 'Calculations!D13', 'FoodDaysLeft': 'Calculations!E13', 'FoodStatus': 'Calculations!F13', 'WaterBase': 'Calculations!B14', 'WaterMod': 'Calculations!C14', 'WaterDaily': 'Calculations!D14', 'WaterDaysLeft': 'Calculations!E14', 'WaterStatus': 'Calculations!F14', 'FodderBase': 'Calculations!B15', 'FodderMod': 'Calculations!C15', 'FodderDaily': 'Calculations!D15', 'FodderDaysLeft': 'Calculations!E15', 'FodderStatus': 'Calculations!F15', 'ProvisionBase': 'Calculations!B16', 'ProvisionMod': 'Calculations!C16', 'ProvisionDaily': 'Calculations!D16', 'ProvisionDaysLeft': 'Calculations!E16', 'ProvisionStatus': 'Calculations!F16',
     'Char1_Name': 'Roster!A4', 'Char1_Class': 'Roster!B4', 'Char1_CON': 'Roster!C4', 'Char1_Fort': 'Roster!D4', 'Char1_HP': 'Roster!E4', 'Char1_MaxHP': 'Roster!F4', 'Char1_DaysNoFood': 'Roster!G4', 'Char1_HoursNoWater': 'Roster!H4', 'Char1_HoursNoSleep': 'Roster!I4', 'Char1_CheckNeeded': 'Roster!J4', 'Char1_CheckDC': 'Roster!K4', 'Char1_CheckType': 'Roster!L4', 'Char1_Status': 'Roster!M4',
     'Char2_Name': 'Roster!A5', 'Char2_Class': 'Roster!B5', 'Char2_CON': 'Roster!C5', 'Char2_Fort': 'Roster!D5', 'Char2_HP': 'Roster!E5', 'Char2_MaxHP': 'Roster!F5', 'Char2_DaysNoFood': 'Roster!G5', 'Char2_HoursNoWater': 'Roster!H5', 'Char2_HoursNoSleep': 'Roster!I5', 'Char2_CheckNeeded': 'Roster!J5', 'Char2_CheckDC': 'Roster!K5', 'Char2_CheckType': 'Roster!L5', 'Char2_Status': 'Roster!M5',
@@ -628,6 +669,50 @@ function setupLog(sheet) {
   sheet.setFrozenRows(1);
 }
 
+function setupHexMap(sheet) {
+  sheet.clear();
+  sheet.getRange('A1:F1').merge().setValue('HEX MAP TRACKER').setFontWeight('bold').setFontSize(16).setHorizontalAlignment('center');
+  
+  // Current Location
+  sheet.getRange('A3:B3').merge().setValue('CURRENT LOCATION').setFontWeight('bold').setBackground('#e1f5fe');
+  sheet.getRange('A4:B6').setValues([
+    ['Current Hex (q:r:s):', '0:0:0'],
+    ['Hex Terrain:', ''],
+    ['Pathfinder Terrain:', '']
+  ]);
+  
+  // Hex Map Data
+  sheet.getRange('D3:F3').merge().setValue('HEX MAP DATA').setFontWeight('bold').setBackground('#e1f5fe');
+  sheet.getRange('D4:F4').setValues([['Hex (q:r:s)', 'Map Terrain', 'Pathfinder Terrain']]).setFontWeight('bold');
+  
+  // Terrain Mapping Reference
+  sheet.getRange('A8:B8').merge().setValue('TERRAIN MAPPING').setFontWeight('bold').setBackground('#fff3e0');
+  sheet.getRange('A9:B9').setValues([['Map Terrain', 'Pathfinder Terrain']]).setFontWeight('bold');
+  sheet.getRange('A10:B30').setValues([
+    ['plains', 'Plains'],
+    ['farmland', 'Plains'],
+    ['grassland', 'Plains'],
+    ['scrubland', 'Plains'],
+    ['forest', 'Forest'],
+    ['pine-forest', 'Forest'],
+    ['dense-jungle', 'Jungle'],
+    ['hills', 'Hills'],
+    ['grassy-hills', 'Hills'],
+    ['forest-hills', 'Hills'],
+    ['pine-hills', 'Hills'],
+    ['jungle-hills', 'Hills'],
+    ['mountains', 'Mountains'],
+    ['pine-mountains', 'Mountains'],
+    ['ice-mountains', 'Mountains'],
+    ['desert', 'Desert, sandy'],
+    ['badlands', 'Desert, sandy'],
+    ['swamp', 'Swamp'],
+    ['marsh', 'Swamp'],
+    ['water', 'Plains'], // Water hexes - special handling needed
+    ['deep-water', 'Plains']
+  ]);
+}
+
 function setupEventLog(sheet) {
   // Only set up if the sheet is empty or doesn't have headers
   if (sheet.getLastRow() === 0) {
@@ -680,6 +765,158 @@ function logEvent(eventType, description, details) {
     
   } catch (e) {
     console.error('Error logging event:', e);
+  }
+}
+
+/**
+ * Imports hex map data from JSON and populates the Hex Map sheet.
+ * @param {string} jsonData The JSON string containing hex map data
+ * @returns {string} Confirmation message
+ */
+function importHexMap(jsonData) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const hexMapSheet = ss.getSheetByName('Hex Map');
+    if (!hexMapSheet) {
+      return 'Error: Hex Map sheet not found. Please initialize the campaign first.';
+    }
+    
+    const mapData = JSON.parse(jsonData);
+    const hexes = mapData.terrain?.hexes || {};
+    
+    // Clear existing hex data (keep headers and current location)
+    const lastRow = hexMapSheet.getLastRow();
+    if (lastRow > 10) {
+      hexMapSheet.deleteRows(11, lastRow - 10);
+    }
+    
+    // Prepare hex data for import
+    const hexRows = [];
+    Object.keys(hexes).forEach(hexKey => {
+      const hex = hexes[hexKey];
+      const mapTerrain = hex.tile?.tile_name || '';
+      const pfTerrain = mapTerrainToPathfinder(mapTerrain);
+      hexRows.push([
+        `${hex.q}:${hex.r}:${hex.s}`,
+        mapTerrain,
+        pfTerrain
+      ]);
+    });
+    
+    // Sort by q, then r, then s
+    hexRows.sort((a, b) => {
+      const [q1, r1, s1] = a[0].split(':').map(Number);
+      const [q2, r2, s2] = b[0].split(':').map(Number);
+      if (q1 !== q2) return q1 - q2;
+      if (r1 !== r2) return r1 - r2;
+      return s1 - s2;
+    });
+    
+    // Write hex data
+    if (hexRows.length > 0) {
+      hexMapSheet.getRange(5, 4, hexRows.length, 3).setValues(hexRows);
+    }
+    
+    logEvent('Hex Map Imported', `Imported ${hexRows.length} hexes from ${mapData.metadata?.title || 'map'}`, '');
+    
+    return `Successfully imported ${hexRows.length} hexes from the map.`;
+  } catch (e) {
+    return `Error importing hex map: ${e.message}`;
+  }
+}
+
+/**
+ * Maps hex map terrain types to Pathfinder terrain types.
+ * @param {string} mapTerrain The terrain type from the hex map
+ * @returns {string} The corresponding Pathfinder terrain type
+ */
+function mapTerrainToPathfinder(mapTerrain) {
+  const terrainMap = {
+    'plains': 'Plains',
+    'farmland': 'Plains',
+    'grassland': 'Plains',
+    'scrubland': 'Plains',
+    'forest': 'Forest',
+    'pine-forest': 'Forest',
+    'tree': 'Forest',
+    'dense-jungle': 'Jungle',
+    'jungle-tree': 'Jungle',
+    'hills': 'Hills',
+    'grassy-hills': 'Hills',
+    'forest-hills': 'Hills',
+    'pine-hills': 'Hills',
+    'jungle-hills': 'Hills',
+    'ice-hills': 'Hills',
+    'mountains': 'Mountains',
+    'pine-mountains': 'Mountains',
+    'ice-mountains': 'Mountains',
+    'ice-mountain': 'Mountains',
+    'ice-pine-mountains': 'Mountains',
+    'forest-mountain': 'Mountains',
+    'dead-tree-mountains': 'Mountains',
+    'jungle-mountains': 'Mountains',
+    'desert': 'Desert, sandy',
+    'badlands': 'Desert, sandy',
+    'swamp': 'Swamp',
+    'marsh': 'Swamp',
+    'water': 'Plains', // Special handling - water hexes
+    'deep-water': 'Plains',
+    'beach': 'Plains',
+    'icy': 'Tundra, frozen',
+    'ice-tree': 'Tundra, frozen',
+    'volcano': 'Mountains',
+    'dead-tree': 'Forest',
+    'dead-tree-hills': 'Hills'
+  };
+  
+  return terrainMap[mapTerrain] || 'Plains';
+}
+
+/**
+ * Updates the current hex location and automatically updates terrain.
+ * @param {string} hexCoords Hex coordinates in format "q:r:s"
+ * @returns {string} Confirmation message
+ */
+function setCurrentHex(hexCoords) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const hexMapSheet = ss.getSheetByName('Hex Map');
+    if (!hexMapSheet) {
+      return 'Error: Hex Map sheet not found.';
+    }
+    
+    // Update current hex
+    ss.getRangeByName('CurrentHex').setValue(hexCoords);
+    
+    // Find hex data
+    const hexDataRange = hexMapSheet.getRange('D5:F' + hexMapSheet.getLastRow());
+    const hexData = hexDataRange.getValues();
+    const hexRow = hexData.find(row => row[0] === hexCoords);
+    
+    if (hexRow) {
+      const mapTerrain = hexRow[1];
+      const pfTerrain = hexRow[2] || mapTerrainToPathfinder(mapTerrain);
+      
+      // Update hex terrain display
+      ss.getRangeByName('HexTerrain').setValue(mapTerrain);
+      
+      // Auto-update Pathfinder terrain if it's different
+      const currentTerrain = ss.getRangeByName('Terrain').getValue();
+      if (pfTerrain && pfTerrain !== currentTerrain) {
+        ss.getRangeByName('Terrain').setValue(pfTerrain);
+        logEvent('Location Changed', `Moved to hex ${hexCoords}`, `Terrain auto-updated to ${pfTerrain}`);
+      } else {
+        logEvent('Location Changed', `Moved to hex ${hexCoords}`, `Terrain: ${mapTerrain}`);
+      }
+      
+      return `Location updated to hex ${hexCoords}. Terrain: ${pfTerrain}`;
+    } else {
+      ss.getRangeByName('HexTerrain').setValue('Unknown');
+      logEvent('Location Changed', `Moved to hex ${hexCoords}`, 'Hex not found in map data');
+      return `Location updated to hex ${hexCoords}, but hex not found in map data.`;
+    }
+  } catch (e) {
+    return `Error setting hex location: ${e.message}`;
   }
 }
 
