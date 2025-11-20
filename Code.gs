@@ -458,7 +458,7 @@ function setupDashboard(sheet) {
   sheet.getRange('A4:C5').setValues([['Current Day:', 1, ''], ['Total Miles:', 0, '']]);
   
   sheet.getRange('A7:C7').merge().setValue('ENVIRONMENT').setFontWeight('bold').setBackground('#e8f0fe');
-  sheet.getRange('A8:C11').setValues([['Temperature:', 'Normal', ''], ['Terrain:', 'Plains', ''], ['Path Type:', 'Road', ''], ['Weather:', 'Clear', ''], ['Altitude:', 'Normal', '']]);
+  sheet.getRange('A8:C12').setValues([['Temperature:', 'Normal', ''], ['Terrain:', 'Plains', ''], ['Path Type:', 'Road or Trail', ''], ['Weather:', 'Clear', ''], ['Altitude:', 'Normal', '']]);
   
   sheet.getRange('E3:G3').merge().setValue('DAILY ACTIONS').setFontWeight('bold').setBackground('#e8f0fe');
   sheet.getRange('E4:G7').setValues([['Travel Pace:', 'Normal', ''], ['Animals Grazing:', false, ''], ['Food Found:', 0, 'days'], ['Water Found:', 0, 'gallons']]);
