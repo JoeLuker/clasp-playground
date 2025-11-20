@@ -22,6 +22,8 @@
     document.getElementById('water-status').textContent = `${data.waterDays} days (${data.waterStatus})`;
     
     // Update form values
+    if (data.currentHex) document.getElementById('hex-coords').value = data.currentHex;
+    if (data.hexTerrain) document.getElementById('hex-terrain').textContent = `Terrain: ${data.hexTerrain}`;
     if (data.temperature) document.getElementById('temperature-select').value = data.temperature;
     if (data.terrain) document.getElementById('terrain-select').value = data.terrain;
     if (data.pathType) document.getElementById('path-type-select').value = data.pathType;
@@ -135,6 +137,28 @@
         })
         .withFailureHandler(onFailure)
         .updateEnvironment(environment);
+    });
+    
+    // Set hex location button
+    document.getElementById('set-hex-btn').addEventListener('click', function() {
+      const hexCoords = document.getElementById('hex-coords').value.trim();
+      if (!hexCoords) {
+        alert('Please enter hex coordinates (format: q:r:s)');
+        return;
+      }
+      
+      if (!/^-?\d+:-?\d+:-?\d+$/.test(hexCoords)) {
+        alert('Invalid format. Use q:r:s (e.g., 0:0:0)');
+        return;
+      }
+      
+      google.script.run
+        .withSuccessHandler(function(result) {
+          fetchData();
+          alert(result);
+        })
+        .withFailureHandler(onFailure)
+        .setCurrentHex(hexCoords);
     });
   });
 </script>

@@ -88,6 +88,8 @@ function getDashboardData() {
     return {
       currentDay: ss.getRangeByName('CurrentDay').getValue(),
       totalMiles: ss.getRangeByName('TotalMiles').getValue(),
+      currentHex: ss.getRangeByName('CurrentHex') ? ss.getRangeByName('CurrentHex').getValue() : '',
+      hexTerrain: ss.getRangeByName('HexTerrain') ? ss.getRangeByName('HexTerrain').getValue() : '',
       temperature: ss.getRangeByName('Temperature').getValue(),
       terrain: ss.getRangeByName('Terrain').getValue(),
       pathType: ss.getRangeByName('PathType').getValue(),

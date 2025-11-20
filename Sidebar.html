@@ -35,6 +35,19 @@
         </div>
       </div>
       
+      <!-- LOCATION SECTION -->
+      <div class="section">
+        <h3>Location</h3>
+        <div class="form-group">
+          <label>Current Hex (q:r:s):</label>
+          <div style="display: flex; gap: 5px;">
+            <input type="text" id="hex-coords" placeholder="0:0:0" style="flex: 1;">
+            <button id="set-hex-btn" class="btn-small">Set Hex</button>
+          </div>
+          <div id="hex-terrain" style="font-size: 11px; color: #95a5a6; margin-top: 5px;">-</div>
+        </div>
+      </div>
+      
       <!-- ENVIRONMENT SECTION -->
       <div class="section collapsible">
         <h3 onclick="toggleSection(this)">Environment Settings ▼</h3>
