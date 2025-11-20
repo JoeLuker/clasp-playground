@@ -21,7 +21,24 @@ function onOpen() {
 }
 
 /**
+ * Alternative import method for large JSON files.
+ * Call this directly from the Apps Script editor with your JSON as a string.
+ * Example: importHexMapLarge('{"terrain":{"hexes":{...}}}')
+ * @param {string} jsonData The JSON string (can be very large)
+ * @returns {string} Result message
+ */
+function importHexMapLarge(jsonData) {
+  try {
+    return importHexMap(jsonData);
+  } catch (e) {
+    Logger.log('Import error: ' + e.toString());
+    return `Error: ${e.message}`;
+  }
+}
+
+/**
  * Prompts user to import hex map JSON data.
+ * Note: Prompt dialogs have character limits. For large JSON files, use importHexMapLarge() directly in the Apps Script editor.
  */
 function importHexMapPrompt() {
   const ui = SpreadsheetApp.getUi();
