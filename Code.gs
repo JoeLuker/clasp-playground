@@ -85,6 +85,9 @@ function include(filename) {
 function getDashboardData() {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) {
+      return { error: "Cannot access spreadsheet. Please ensure the script is bound to a Google Sheet and you have permission to access it." };
+    }
     return {
       currentDay: ss.getRangeByName('CurrentDay').getValue(),
       totalMiles: ss.getRangeByName('TotalMiles').getValue(),
@@ -106,7 +109,11 @@ function getDashboardData() {
       alertText: ss.getRangeByName('AlertText').getValue()
     };
   } catch (e) {
-    return { error: "Sheet not initialized. Please run 'Initialize/Reset Campaign' from the menu." };
+    Logger.log('Error in getDashboardData: ' + e.toString());
+    if (e.toString().includes('failed while accessing document')) {
+      return { error: "Permission error: The script cannot access the spreadsheet. Please ensure:\n1. The script is bound to your Google Sheet\n2. You have authorized the script\n3. You have permission to edit the spreadsheet\n\nTry running 'Initialize/Reset Campaign' from the menu to re-authorize." };
+    }
+    return { error: `Error: ${e.message}. Please run 'Initialize/Reset Campaign' from the menu if the sheet is not initialized.` };
   }
 }
 
