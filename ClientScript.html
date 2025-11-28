@@ -5,7 +5,6 @@
     document.getElementById('process-day-btn').textContent = isLoading ? 'Processing...' : 'Process Day';
   }
 
-  // --- UTILITY FUNCTIONS ---
   function toggleSection(header) {
     const content = header.nextElementSibling;
     content.classList.toggle('active');
@@ -42,35 +41,77 @@
   }
 
   // --- SERVER CALL HANDLERS ---
+  function showNotification(message, isError = false) {
+    const alertBox = document.getElementById('alert-box');
+    if (alertBox) {
+      alertBox.textContent = message;
+      alertBox.classList.remove('no-alert');
+      if (isError) {
+        alertBox.style.backgroundColor = '#c0392b';
+      }
+      // Auto-clear after 5 seconds for non-critical messages
+      if (!isError) {
+        setTimeout(() => {
+          if (alertBox.textContent === message) {
+            alertBox.textContent = 'All systems normal.';
+            alertBox.classList.add('no-alert');
+          }
+        }, 5000);
+      }
+    } else {
+      // Fallback to alert if alert box not found
+      alert(message);
+    }
+  }
+
   function onProcessDaySuccess(message) {
-    // After processing, show the message and then refresh the whole sidebar display
-    alert(message); // Simple alert for confirmation
+    // Show success notification instead of blocking alert
+    showNotification(message, false);
     fetchData();
   }
 
   function onPreviewDaySuccess(preview) {
-    const message = `PREVIEW:\n` +
-      `Miles: ${preview.miles}\n` +
-      `Food: -${preview.food} units\n` +
-      `Water: -${preview.water} units\n` +
-      `Fodder: -${preview.fodder} units\n` +
-      `Provisions: -${preview.provisions} units`;
-    alert(message);
+    const message = `Preview: ${preview.miles} miles, Food: -${preview.food}, Water: -${preview.water}, Fodder: -${preview.fodder}, Provisions: -${preview.provisions}`;
+    showNotification(message, false);
     showLoading(false); // Re-enable buttons after preview
   }
 
-  function onFailure(error) {
-    alert('An error occurred: ' + error.message);
-    showLoading(false); // Re-enable buttons on failure
+  let retryCount = 0;
+  const MAX_RETRIES = 2;
+  
+  function onFailure(error, retryFunction = null) {
+    retryCount++;
+    const errorMessage = error.message || 'An unknown error occurred';
+    
+    // Retry transient errors (network issues, quota exceeded temporarily)
+    if (retryCount <= MAX_RETRIES && retryFunction && 
+        (errorMessage.includes('timeout') || errorMessage.includes('quota') || errorMessage.includes('network'))) {
+      showNotification(`Error: ${errorMessage}. Retrying... (${retryCount}/${MAX_RETRIES})`, true);
+      setTimeout(() => {
+        retryFunction();
+      }, 1000 * retryCount); // Exponential backoff
+      return;
+    }
+    
+    // Show error notification
+    showNotification(`Error: ${errorMessage}`, true);
+    showLoading(false);
+    retryCount = 0; // Reset retry count
   }
   
   // --- MAIN DATA FETCH FUNCTION ---
   function fetchData() {
     showLoading(true);
+    retryCount = 0; // Reset retry count for new operation
     google.script.run
-      .withSuccessHandler(updateSidebar)
-      .withFailureHandler(onFailure)
-      .withUserObject(this) // helps ensure UI enables correctly
+      .withSuccessHandler(function(data) {
+        retryCount = 0; // Reset on success
+        updateSidebar(data);
+        showLoading(false);
+      })
+      .withFailureHandler(function(error) {
+        onFailure(error, fetchData);
+      })
       .getDashboardData();
   }
 
@@ -82,17 +123,34 @@
     // Attach click handlers to buttons
     document.getElementById('process-day-btn').addEventListener('click', function() {
       showLoading(true);
+      retryCount = 0;
       google.script.run
-        .withSuccessHandler(onProcessDaySuccess)
-        .withFailureHandler(onFailure)
+        .withSuccessHandler(function(message) {
+          retryCount = 0;
+          onProcessDaySuccess(message);
+          showLoading(false);
+        })
+        .withFailureHandler(function(error) {
+          onFailure(error, function() {
+            document.getElementById('process-day-btn').click();
+          });
+        })
         .processDay();
     });
 
     document.getElementById('preview-day-btn').addEventListener('click', function() {
       showLoading(true);
+      retryCount = 0;
       google.script.run
-        .withSuccessHandler(onPreviewDaySuccess)
-        .withFailureHandler(onFailure)
+        .withSuccessHandler(function(preview) {
+          retryCount = 0;
+          onPreviewDaySuccess(preview);
+        })
+        .withFailureHandler(function(error) {
+          onFailure(error, function() {
+            document.getElementById('preview-day-btn').click();
+          });
+        })
         .previewDay();
     });
     
@@ -104,7 +162,7 @@
       const waterFound = parseFloat(document.getElementById('water-found').value) || 0;
       
       if (foodFound === 0 && waterFound === 0) {
-        alert('Please enter at least one resource value.');
+        showNotification('Please enter at least one resource value.', true);
         return;
       }
       
@@ -113,9 +171,11 @@
           document.getElementById('food-found').value = '';
           document.getElementById('water-found').value = '';
           fetchData();
-          alert('Resources updated!');
+          showNotification('Resources updated!', false);
         })
-        .withFailureHandler(onFailure)
+        .withFailureHandler(function(error) {
+          onFailure(error);
+        })
         .updateResourcesFound(foodFound, waterFound);
     });
     
@@ -133,9 +193,11 @@
       google.script.run
         .withSuccessHandler(function() {
           fetchData();
-          alert('Environment updated!');
+          showNotification('Environment updated!', false);
         })
-        .withFailureHandler(onFailure)
+        .withFailureHandler(function(error) {
+          onFailure(error);
+        })
         .updateEnvironment(environment);
     });
     
@@ -143,21 +205,23 @@
     document.getElementById('set-hex-btn').addEventListener('click', function() {
       const hexCoords = document.getElementById('hex-coords').value.trim();
       if (!hexCoords) {
-        alert('Please enter hex coordinates (format: q:r:s)');
+        showNotification('Please enter hex coordinates (format: q:r:s)', true);
         return;
       }
       
       if (!/^-?\d+:-?\d+:-?\d+$/.test(hexCoords)) {
-        alert('Invalid format. Use q:r:s (e.g., 0:0:0)');
+        showNotification('Invalid format. Use q:r:s (e.g., 0:0:0)', true);
         return;
       }
       
       google.script.run
         .withSuccessHandler(function(result) {
           fetchData();
-          alert(result);
+          showNotification(result, false);
         })
-        .withFailureHandler(onFailure)
+        .withFailureHandler(function(error) {
+          onFailure(error);
+        })
         .setCurrentHex(hexCoords);
     });
   });

@@ -4,6 +4,45 @@
  * Manages all sheet interactions and provides data to the HTML sidebar.
  */
 
+// ============= CONSTANTS =============
+
+const SHEET_NAMES = {
+  DASHBOARD: 'Dashboard',
+  CALCULATIONS: 'Calculations',
+  ROSTER: 'Roster',
+  STATUS: 'Status Monitor',
+  CONSTANTS: 'Constants',
+  REFERENCES: 'Reference Tables',
+  CARAVAN: 'Caravan',
+  EXPLORATION: 'Exploration',
+  LOG: 'Log',
+  HEX_MAP: 'Hex Map',
+  EVENT_LOG: 'Event Log'
+};
+
+const SHEET_COLORS = {
+  DASHBOARD: '#4285f4',
+  CALCULATIONS: '#0f9d58',
+  ROSTER: '#ea4335',
+  STATUS: '#fbbc04',
+  CONSTANTS: '#9c27b0',
+  REFERENCES: '#9e9e9e',
+  CARAVAN: '#ff6f00',
+  EXPLORATION: '#00897b',
+  LOG: '#673ab7',
+  HEX_MAP: '#00bcd4',
+  EVENT_LOG: '#9c27b0'
+};
+
+const ROW_OFFSETS = {
+  PARTY_START: 4,
+  PARTY_COUNT: 4,
+  MOUNT_START: 19,
+  FORMULA_START: 5
+};
+
+const BATCH_SIZE = 1000;
+
 // ============= MENU AND SIDEBAR INITIALIZATION =============
 
 function onOpen() {
@@ -115,25 +154,50 @@ function getDashboardData() {
     if (!ss) {
       return { error: "Cannot access spreadsheet. Please ensure the script is bound to a Google Sheet and you have permission to access it." };
     }
+    
+    // Batch read all named ranges to reduce API calls
+    const rangeNames = [
+      'CurrentDay', 'TotalMiles', 'CurrentHex', 'HexTerrain',
+      'Temperature', 'Terrain', 'PathType', 'Weather', 'TravelPace',
+      'AnimalsGrazing', 'FoodDaysLeft', 'FoodStatus', 'WaterDaysLeft',
+      'WaterStatus', 'AvgHPPercent', 'ChecksNeeded', 'CriticalCount', 'AlertText'
+    ];
+    
+    const values = {};
+    rangeNames.forEach(name => {
+      try {
+        const range = ss.getRangeByName(name);
+        if (range) {
+          // Use getDisplayValue for AvgHPPercent to preserve formatting
+          values[name] = name === 'AvgHPPercent' ? range.getDisplayValue() : range.getValue();
+        } else {
+          values[name] = name === 'CurrentHex' || name === 'HexTerrain' ? '' : null;
+        }
+      } catch (e) {
+        Logger.log(`Warning: Could not read range ${name}: ${e.message}`);
+        values[name] = name === 'CurrentHex' || name === 'HexTerrain' ? '' : null;
+      }
+    });
+    
     return {
-      currentDay: ss.getRangeByName('CurrentDay').getValue(),
-      totalMiles: ss.getRangeByName('TotalMiles').getValue(),
-      currentHex: ss.getRangeByName('CurrentHex') ? ss.getRangeByName('CurrentHex').getValue() : '',
-      hexTerrain: ss.getRangeByName('HexTerrain') ? ss.getRangeByName('HexTerrain').getValue() : '',
-      temperature: ss.getRangeByName('Temperature').getValue(),
-      terrain: ss.getRangeByName('Terrain').getValue(),
-      pathType: ss.getRangeByName('PathType').getValue(),
-      weather: ss.getRangeByName('Weather').getValue(),
-      travelPace: ss.getRangeByName('TravelPace').getValue(),
-      animalsGrazing: ss.getRangeByName('AnimalsGrazing').getValue(),
-      foodDays: ss.getRangeByName('FoodDaysLeft').getValue(),
-      foodStatus: ss.getRangeByName('FoodStatus').getValue(),
-      waterDays: ss.getRangeByName('WaterDaysLeft').getValue(),
-      waterStatus: ss.getRangeByName('WaterStatus').getValue(),
-      avgHp: ss.getRangeByName('AvgHPPercent').getDisplayValue(),
-      checksNeeded: ss.getRangeByName('ChecksNeeded').getValue(),
-      criticalCount: ss.getRangeByName('CriticalCount').getValue(),
-      alertText: ss.getRangeByName('AlertText').getValue()
+      currentDay: values.CurrentDay || 0,
+      totalMiles: values.TotalMiles || 0,
+      currentHex: values.CurrentHex || '',
+      hexTerrain: values.HexTerrain || '',
+      temperature: values.Temperature || 'Normal',
+      terrain: values.Terrain || 'Plains',
+      pathType: values.PathType || 'Road or Trail',
+      weather: values.Weather || 'Clear',
+      travelPace: values.TravelPace || 'Normal',
+      animalsGrazing: values.AnimalsGrazing || false,
+      foodDays: values.FoodDaysLeft || 0,
+      foodStatus: values.FoodStatus || 'GOOD',
+      waterDays: values.WaterDaysLeft || 0,
+      waterStatus: values.WaterStatus || 'GOOD',
+      avgHp: values.AvgHPPercent || '100%',
+      checksNeeded: values.ChecksNeeded || 0,
+      criticalCount: values.CriticalCount || 0,
+      alertText: values.AlertText || ''
     };
   } catch (e) {
     Logger.log('Error in getDashboardData: ' + e.toString());
@@ -151,16 +215,33 @@ function getDashboardData() {
  * @returns {string} Confirmation message
  */
 function updateResourcesFound(foodFound, waterFound) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  if (foodFound > 0) {
-    ss.getRangeByName('FoodFound').setValue(foodFound);
-    logEvent('Resource Found', `Found ${foodFound} days of food`, '');
+  try {
+    // Input validation
+    if (typeof foodFound !== 'number' || foodFound < 0 || isNaN(foodFound)) {
+      throw new Error('Food found must be a non-negative number');
+    }
+    if (typeof waterFound !== 'number' || waterFound < 0 || isNaN(waterFound)) {
+      throw new Error('Water found must be a non-negative number');
+    }
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) {
+      throw new Error('Cannot access spreadsheet');
+    }
+    
+    if (foodFound > 0) {
+      ss.getRangeByName('FoodFound').setValue(foodFound);
+      logEvent('Resource Found', `Found ${foodFound} days of food`, '');
+    }
+    if (waterFound > 0) {
+      ss.getRangeByName('WaterFound').setValue(waterFound);
+      logEvent('Resource Found', `Found ${waterFound} gallons of water`, '');
+    }
+    return 'Resources updated successfully';
+  } catch (e) {
+    Logger.log('Error in updateResourcesFound: ' + e.toString());
+    throw e;
   }
-  if (waterFound > 0) {
-    ss.getRangeByName('WaterFound').setValue(waterFound);
-    logEvent('Resource Found', `Found ${waterFound} gallons of water`, '');
-  }
-  return 'Resources updated successfully';
 }
 
 /**
@@ -169,19 +250,67 @@ function updateResourcesFound(foodFound, waterFound) {
  * @returns {string} Confirmation message
  */
 function updateEnvironment(environment) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  ss.getRangeByName('Temperature').setValue(environment.temperature);
-  ss.getRangeByName('Terrain').setValue(environment.terrain);
-  ss.getRangeByName('PathType').setValue(environment.pathType);
-  ss.getRangeByName('Weather').setValue(environment.weather);
-  ss.getRangeByName('TravelPace').setValue(environment.travelPace);
-  ss.getRangeByName('AnimalsGrazing').setValue(environment.animalsGrazing);
-  
-  logEvent('Environment Changed', 
-    `${environment.terrain} terrain, ${environment.weather} weather, ${environment.travelPace} pace`,
-    `Temperature: ${environment.temperature}, Path: ${environment.pathType}, Grazing: ${environment.animalsGrazing ? 'Yes' : 'No'}`);
-  
-  return 'Environment updated successfully';
+  try {
+    // Input validation
+    if (!environment || typeof environment !== 'object') {
+      throw new Error('Environment object is required');
+    }
+    
+    const validTemperatures = ['Extreme Cold', 'Severe Cold', 'Cold', 'Normal', 'Hot', 'Severe Heat', 'Extreme Heat'];
+    const validTerrains = ['Desert, sandy', 'Forest', 'Hills', 'Jungle', 'Moor', 'Mountains', 'Plains', 'Swamp', 'Tundra, frozen'];
+    const validPathTypes = ['Highway', 'Road or Trail', 'Trackless'];
+    const validWeather = ['Clear', 'Light Rain', 'Heavy Rain', 'Storm', 'Snow', 'Blizzard'];
+    const validPaces = ['Slow', 'Normal', 'Fast'];
+    
+    if (environment.temperature && !validTemperatures.includes(environment.temperature)) {
+      throw new Error(`Invalid temperature: ${environment.temperature}`);
+    }
+    if (environment.terrain && !validTerrains.includes(environment.terrain)) {
+      throw new Error(`Invalid terrain: ${environment.terrain}`);
+    }
+    if (environment.pathType && !validPathTypes.includes(environment.pathType)) {
+      throw new Error(`Invalid path type: ${environment.pathType}`);
+    }
+    if (environment.weather && !validWeather.includes(environment.weather)) {
+      throw new Error(`Invalid weather: ${environment.weather}`);
+    }
+    if (environment.travelPace && !validPaces.includes(environment.travelPace)) {
+      throw new Error(`Invalid travel pace: ${environment.travelPace}`);
+    }
+    if (environment.animalsGrazing !== undefined && typeof environment.animalsGrazing !== 'boolean') {
+      throw new Error('AnimalsGrazing must be a boolean');
+    }
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) {
+      throw new Error('Cannot access spreadsheet');
+    }
+    
+    // Batch updates
+    const updates = [];
+    if (environment.temperature) updates.push({ name: 'Temperature', value: environment.temperature });
+    if (environment.terrain) updates.push({ name: 'Terrain', value: environment.terrain });
+    if (environment.pathType) updates.push({ name: 'PathType', value: environment.pathType });
+    if (environment.weather) updates.push({ name: 'Weather', value: environment.weather });
+    if (environment.travelPace) updates.push({ name: 'TravelPace', value: environment.travelPace });
+    if (environment.animalsGrazing !== undefined) updates.push({ name: 'AnimalsGrazing', value: environment.animalsGrazing });
+    
+    updates.forEach(update => {
+      const range = ss.getRangeByName(update.name);
+      if (range) {
+        range.setValue(update.value);
+      }
+    });
+    
+    logEvent('Environment Changed', 
+      `${environment.terrain || 'Unknown'} terrain, ${environment.weather || 'Unknown'} weather, ${environment.travelPace || 'Unknown'} pace`,
+      `Temperature: ${environment.temperature || 'Unknown'}, Path: ${environment.pathType || 'Unknown'}, Grazing: ${environment.animalsGrazing ? 'Yes' : 'No'}`);
+    
+    return 'Environment updated successfully';
+  } catch (e) {
+    Logger.log('Error in updateEnvironment: ' + e.toString());
+    throw e;
+  }
 }
 
 // ============= ACTION FUNCTIONS CALLED BY SIDEBAR =============
@@ -191,51 +320,62 @@ function updateEnvironment(environment) {
  * @returns {string} A confirmation message for the user.
  */
 function processDay() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  
-  const currentDay = ss.getRangeByName('CurrentDay').getValue();
-  const miles = ss.getRangeByName('CalcMilesToday').getValue();
-  const newDay = currentDay + 1;
-  ss.getRangeByName('CurrentDay').setValue(newDay);
-  ss.getRangeByName('TotalMiles').setValue(ss.getRangeByName('TotalMiles').getValue() + miles);
-  
-  const foodUsed = ss.getRangeByName('FoodDaily').getValue();
-  const waterUsed = ss.getRangeByName('WaterDaily').getValue();
-  const fodderUsed = ss.getRangeByName('FodderDaily').getValue();
-  const provisionUsed = ss.getRangeByName('ProvisionDaily').getValue();
-  const foodFound = ss.getRangeByName('FoodFound').getValue();
-  const waterFound = ss.getRangeByName('WaterFound').getValue();
-  
-  ss.getRangeByName('FoodStock').setValue(
-    ss.getRangeByName('FoodStock').getValue() - foodUsed + foodFound
-  );
-  ss.getRangeByName('WaterStock').setValue(
-    ss.getRangeByName('WaterStock').getValue() - waterUsed + waterFound
-  );
-  ss.getRangeByName('FodderStock').setValue(
-    ss.getRangeByName('FodderStock').getValue() - fodderUsed
-  );
-  ss.getRangeByName('ProvisionStock').setValue(
-    ss.getRangeByName('ProvisionStock').getValue() - provisionUsed
-  );
-  updateDeprivation(ss);
-  const log = ss.getSheetByName('Log');
-  log.appendRow([
-    newDay, new Date(), miles,
-    foodUsed,
-    waterUsed,
-    fodderUsed,
-    provisionUsed,
-    ''
-  ]);
-  ss.getRangeByName('FoodFound').setValue(0);
-  ss.getRangeByName('WaterFound').setValue(0);
-  
-  // Log the day processing event
-  const details = `Traveled ${Math.round(miles)} miles. Resources: Food -${foodUsed}${foodFound > 0 ? ' +' + foodFound : ''}, Water -${waterUsed}${waterFound > 0 ? ' +' + waterFound : ''}, Fodder -${fodderUsed}, Provisions -${provisionUsed}`;
-  logEvent('Day Processed', `Advanced to Day ${newDay}`, details);
-  
-  return `Advanced to Day ${newDay}. Traveled ${Math.round(miles)} miles.`;
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) {
+      throw new Error('Cannot access spreadsheet');
+    }
+    
+    // Batch read all values first
+    const currentDay = ss.getRangeByName('CurrentDay').getValue() || 0;
+    const miles = ss.getRangeByName('CalcMilesToday').getValue() || 0;
+    const totalMiles = ss.getRangeByName('TotalMiles').getValue() || 0;
+    const foodUsed = ss.getRangeByName('FoodDaily').getValue() || 0;
+    const waterUsed = ss.getRangeByName('WaterDaily').getValue() || 0;
+    const fodderUsed = ss.getRangeByName('FodderDaily').getValue() || 0;
+    const provisionUsed = ss.getRangeByName('ProvisionDaily').getValue() || 0;
+    const foodFound = ss.getRangeByName('FoodFound').getValue() || 0;
+    const waterFound = ss.getRangeByName('WaterFound').getValue() || 0;
+    const foodStock = ss.getRangeByName('FoodStock').getValue() || 0;
+    const waterStock = ss.getRangeByName('WaterStock').getValue() || 0;
+    const fodderStock = ss.getRangeByName('FodderStock').getValue() || 0;
+    const provisionStock = ss.getRangeByName('ProvisionStock').getValue() || 0;
+    
+    const newDay = currentDay + 1;
+    
+    // Batch update all values
+    ss.getRangeByName('CurrentDay').setValue(newDay);
+    ss.getRangeByName('TotalMiles').setValue(totalMiles + miles);
+    ss.getRangeByName('FoodStock').setValue(foodStock - foodUsed + foodFound);
+    ss.getRangeByName('WaterStock').setValue(waterStock - waterUsed + waterFound);
+    ss.getRangeByName('FodderStock').setValue(fodderStock - fodderUsed);
+    ss.getRangeByName('ProvisionStock').setValue(provisionStock - provisionUsed);
+    ss.getRangeByName('FoodFound').setValue(0);
+    ss.getRangeByName('WaterFound').setValue(0);
+    
+    // Update deprivation stats
+    updateDeprivation(ss);
+    
+    // Log the day
+    const log = ss.getSheetByName(SHEET_NAMES.LOG);
+    log.appendRow([
+      newDay, new Date(), miles,
+      foodUsed,
+      waterUsed,
+      fodderUsed,
+      provisionUsed,
+      ''
+    ]);
+    
+    // Log the day processing event
+    const details = `Traveled ${Math.round(miles)} miles. Resources: Food -${foodUsed}${foodFound > 0 ? ' +' + foodFound : ''}, Water -${waterUsed}${waterFound > 0 ? ' +' + waterFound : ''}, Fodder -${fodderUsed}, Provisions -${provisionUsed}`;
+    logEvent('Day Processed', `Advanced to Day ${newDay}`, details);
+    
+    return `Advanced to Day ${newDay}. Traveled ${Math.round(miles)} miles.`;
+  } catch (e) {
+    Logger.log('Error in processDay: ' + e.toString());
+    throw e;
+  }
 }
 
 /**
@@ -243,14 +383,23 @@ function processDay() {
  * @returns {object} An object with the calculated preview data.
  */
 function previewDay() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  return {
-    miles: Math.round(ss.getRangeByName('CalcMilesToday').getValue()),
-    food: ss.getRangeByName('FoodDaily').getValue(),
-    water: ss.getRangeByName('WaterDaily').getValue(),
-    fodder: ss.getRangeByName('FodderDaily').getValue(),
-    provisions: ss.getRangeByName('ProvisionDaily').getValue(),
-  };
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    if (!ss) {
+      throw new Error('Cannot access spreadsheet');
+    }
+    
+    return {
+      miles: Math.round(ss.getRangeByName('CalcMilesToday').getValue() || 0),
+      food: ss.getRangeByName('FoodDaily').getValue() || 0,
+      water: ss.getRangeByName('WaterDaily').getValue() || 0,
+      fodder: ss.getRangeByName('FodderDaily').getValue() || 0,
+      provisions: ss.getRangeByName('ProvisionDaily').getValue() || 0,
+    };
+  } catch (e) {
+    Logger.log('Error in previewDay: ' + e.toString());
+    throw e;
+  }
 }
 
 /**
@@ -290,7 +439,7 @@ function initializeCompleteCampaign() {
   if (response !== ui.Button.YES) return;
   
   // Preserve Event Log if it exists
-  let eventLogSheet = ss.getSheetByName('Event Log');
+  let eventLogSheet = ss.getSheetByName(SHEET_NAMES.EVENT_LOG);
   let eventLogData = null;
   if (eventLogSheet) {
     // Save the data
@@ -386,7 +535,7 @@ function createAllNamedRanges(ss) {
 }
 
 function addAllFormulas(ss) {
-  const calc = ss.getSheetByName('Calculations');
+  const calc = ss.getSheetByName(SHEET_NAMES.CALCULATIONS);
   calc.getRange('B5').setFormula('=BASE_SPEED');
   calc.getRange('B6').setFormula('=IFNA(IF(PathType="Highway", VLOOKUP(Terrain, TerrainTable, 2, FALSE), IF(PathType="Road or Trail", VLOOKUP(Terrain, TerrainTable, 3, FALSE), VLOOKUP(Terrain, TerrainTable, 4, FALSE))), 1)');
   calc.getRange('B7').setFormula('=IFNA(VLOOKUP(TravelPace, PaceTable, 2, FALSE), 1)');
@@ -412,9 +561,9 @@ function addAllFormulas(ss) {
   calc.getRange('D16').setFormula('=ProvisionBase * ProvisionMod');
   calc.getRange('E16').setFormula('=IFERROR(IF(ProvisionDaily > 0, MIN(INT(ProvisionStock / ProvisionDaily), MAX_DAYS), MAX_DAYS), MAX_DAYS)');
   calc.getRange('F16').setFormula('=IF(ProvisionDaysLeft < DAYS_CRITICAL, "CRITICAL", IF(ProvisionDaysLeft < DAYS_LOW, "LOW", IF(ProvisionDaysLeft < DAYS_GOOD, "OK", "GOOD")))');
-  const roster = ss.getSheetByName('Roster');
-  for (let i = 1; i <= 4; i++) {
-    const row = 3 + i;
+  const roster = ss.getSheetByName(SHEET_NAMES.ROSTER);
+  for (let i = 1; i <= ROW_OFFSETS.PARTY_COUNT; i++) {
+    const row = ROW_OFFSETS.PARTY_START + i - 1;
     roster.getRange(`J${row}`).setFormula(`=IF(LEN(A${row}), IF(OR(G${row} > STARVATION_DAYS, H${row} > (DEHYDRATION_HOURS + C${row})), "YES", "NO"), "")`);
     roster.getRange(`K${row}`).setFormula(`=IF(J${row}="YES", IF(G${row} > STARVATION_DAYS, SURVIVAL_DC_BASE + G${row} - STARVATION_DAYS, SURVIVAL_DC_BASE + INT((H${row} - DEHYDRATION_HOURS - C${row}) / HOURS_PER_DAY)), 0)`);
     roster.getRange(`L${row}`).setFormula(`=IF(J${row}="YES", IF(G${row} > STARVATION_DAYS, "Starvation", "Dehydration"), "OK")`);
@@ -428,7 +577,7 @@ function addAllFormulas(ss) {
   roster.getRange('P10').setFormula('=PartySize + MountCount');
   roster.getRange('I19').setFormula('=AnimalsGrazing');
   roster.getRange('J19').setFormula('=IF(LEN(A19), IF(E19>0, IF(D19/E19 < HP_BLOODIED, "Injured", "Healthy"), "Healthy"), "")');
-  const caravan = ss.getSheetByName('Caravan');
+  const caravan = ss.getSheetByName(SHEET_NAMES.CARAVAN);
   caravan.getRange('G4').setFormula('=CaravanOffense + MIN(5, COUNTIF(AllTravelerJobs, "Guard"))');
   caravan.getRange('I4').setFormula('=10 + CaravanDefense');
   caravan.getRange('G5').setFormula('=CaravanOffense + MIN(5, COUNTIF(AllTravelerJobs, "Guide"))');
@@ -438,7 +587,7 @@ function addAllFormulas(ss) {
   caravan.getRange('G7').setFormula('=SUM(AllWagonCargo)');
   caravan.getRange('I7').setFormula('=SUM(AllWagonTravelers)');
   caravan.getRange('G8').setFormula('=IFERROR(SUM(AllWagonConsumption) + COUNTIF(AllTravelerJobs, "<>") / 2 - MIN(5, COUNTIF(AllTravelerJobs, "Cook")) * 2, 0)');
-  const status = ss.getSheetByName('Status Monitor');
+  const status = ss.getSheetByName(SHEET_NAMES.STATUS);
   status.getRange('B5').setFormula('=FoodDaysLeft');
   status.getRange('B6').setFormula('=WaterDaysLeft');
   status.getRange('B7').setFormula('=FodderDaysLeft');
@@ -451,7 +600,7 @@ function addAllFormulas(ss) {
   status.getRange('G6').setFormula('=ChecksNeeded');
   status.getRange('G7').setFormula('=CriticalCount');
   status.getRange('A11').setFormula('=TRIM(CONCATENATE(IF(FoodStatus = "CRITICAL", "Food CRITICAL! ", ""), IF(WaterStatus = "CRITICAL", "Water CRITICAL! ", ""), IF(FodderStatus = "CRITICAL", "Fodder CRITICAL! ", ""), IF(ChecksNeeded > 0, ChecksNeeded & " checks needed! ", ""), IF(CriticalCount > 0, CriticalCount & " members critical! ", ""), IF(CaravanUnrest > CaravanMorale, "MUTINY RISK!", "")))');
-  const exploration = ss.getSheetByName('Exploration');
+  const exploration = ss.getSheetByName(SHEET_NAMES.EXPLORATION);
   // Exploration DC lookup based on Territory CR (Table 4-1: Exploration DCs)
   exploration.getRange('B7').setFormula('=IFNA(VLOOKUP(TerritoryCR, D5:E24, 2, FALSE), 16 + TerritoryCR)');
   // Location discovery scores (Base + Terrain Mod + Hidden Mod)
@@ -774,7 +923,7 @@ function setupEventLog(sheet) {
 function logEvent(eventType, description, details) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let eventLogSheet = ss.getSheetByName('Event Log');
+    let eventLogSheet = ss.getSheetByName(SHEET_NAMES.EVENT_LOG);
     
     // Create Event Log if it doesn't exist
     if (!eventLogSheet) {
@@ -816,7 +965,7 @@ function importHexMap(jsonData) {
       throw new Error('Cannot access spreadsheet. Please ensure the script is bound to a Google Sheet.');
     }
     
-    const hexMapSheet = ss.getSheetByName('Hex Map');
+    const hexMapSheet = ss.getSheetByName(SHEET_NAMES.HEX_MAP);
     if (!hexMapSheet) {
       throw new Error('Hex Map sheet not found. Please run "Initialize/Reset Campaign" first.');
     }
@@ -958,7 +1107,7 @@ function mapTerrainToPathfinder(mapTerrain) {
 function setCurrentHex(hexCoords) {
   try {
     const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const hexMapSheet = ss.getSheetByName('Hex Map');
+    const hexMapSheet = ss.getSheetByName(SHEET_NAMES.HEX_MAP);
     if (!hexMapSheet) {
       return 'Error: Hex Map sheet not found.';
     }
